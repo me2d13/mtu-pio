@@ -7,7 +7,16 @@
 #include "config.h"
 #include "web.h"
 #include "net.h"
+#include "i2c.h"
+#include <Wire.h>
+#include "lcd.h"
+#include <ReactESP.h>
 
+using namespace reactesp;
+
+EventLoop event_loop;
+
+TwoWire i2Cone = TwoWire(0);
 
 void setup() {
     Serial.begin(115200);
@@ -27,6 +36,11 @@ void setup() {
     logger.log("IP Address: " + getIp());
     syncNtp();
 
+    i2Cone.begin(SDA_PIN_LCD, SCL_PIN_LCD);
+    scanI2CBus(i2Cone);
+    setupLcd(i2Cone);
+    lcdAbout();
+
     // Initialize SPIFFS
     if(!SPIFFS.begin(true)){
       Serial.println("An Error has occurred while mounting SPIFFS");
@@ -34,14 +48,12 @@ void setup() {
     }
 
     setupWeb();
+
+    event_loop.onRepeat(1000, [] () {
+      lcdAbout();
+    });
 }
 
 void loop() {
-  // Log something periodically
-    static unsigned long lastLogTime = 0;
-    if (millis() - lastLogTime >= 5000) { // Log every 5 seconds
-        String uptime = "Uptime: " + String(millis() / 1000) + " seconds";
-        //notifyClients(logger.log(uptime.c_str()).c_str()); // Notify clients of the new log message
-        lastLogTime = millis();
-    }
+  event_loop.tick();
 }

@@ -23,18 +23,22 @@ std::string getIp() {
     return std::string(WiFi.localIP().toString().c_str());
 }
 
+std::string getTimeStr() {
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo)) {
+        char timeStr[20];
+        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
+        return std::string(timeStr);
+    } else {
+        return std::string("?");
+    }
+}
+
 void syncNtp() {
     // Initialize time via NTP
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     logger.log("Time synchronized with NTP server.");
 
-   // Log initial time
-    struct tm timeinfo;
-    if (getLocalTime(&timeinfo)) {
-        char timeStr[20];
-        strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
-        logger.log("Current time: " + std::string(timeStr));
-    } else {
-        logger.log("Failed to get time.");
-    }
+    // Log initial time
+    logger.log("Current time: " + getTimeStr());
 }

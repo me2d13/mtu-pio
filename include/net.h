@@ -3,4 +3,5 @@
 
 void setupWifi();
 std::string getIp();
+std::string getTimeStr();
 void syncNtp();
