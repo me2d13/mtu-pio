@@ -6,6 +6,7 @@
 #include "Logger.h"
 #include "web.h"
 #include <string>
+#include <vector>
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws"); // WebSocket on "/ws"
@@ -48,6 +49,20 @@ const char* html5 = R"rawliteral(
 </html>
 )rawliteral";
 
+// Structure to hold page information
+struct Page {
+    std::string name;
+    std::string title;
+    std::string link;
+};
+
+// Define the pages
+std::vector<Page> pages = {
+    {"log", "Logs", "/log"},
+    {"motor", "Motor Control", "/motor"},
+    {"about", "About", "/about"}
+};
+
 // Function to notify clients of a new log message
 void notifyClients(const std::string& logMessage) {
     String message = String(logMessage.c_str());
@@ -67,15 +82,23 @@ void notFound(AsyncWebServerRequest *request) {
     request->send(404, "text/plain", "Not found, sorry");
 }
 
-std::string generateNav() {
-    return "<li><a href=\"/log\">Log</a></li>"
-     "<li><a href=\"/about\">About</a></li>";
+std::string generateNav(const std::string& currentPage) {
+    std::string nav = "";
+    for (const auto& page : pages) {
+        if (page.name == currentPage) {
+            nav += "<li><b>" + page.title + "</b></li>";
+        } else {
+            nav += "<li><a href=\"" + page.link + "\">" + page.title + "</a></li>";
+        }
+    }
+    return nav;
 }
 
 void servePage(
     AsyncWebServerRequest* request,
     const std::string& title,
-    const std::string& body
+    const std::string& body,
+    const std::string& currentPage
     ) {
     AsyncResponseStream *response = request->beginResponseStream("text/html");
     response->print(html1);
@@ -83,11 +106,45 @@ void servePage(
     response->print(html2);
     response->printf("<header>%s</header>", title.c_str());
     response->print(html3);
-    response->print(generateNav().c_str());
+    response->print(generateNav(currentPage).c_str());
     response->print(html4);
     response->print(body.c_str());
     response->print(html5);
     request->send(response);
+}
+
+void handleLogRequest(AsyncWebServerRequest* request) {
+    std::string body = "<h1>Log Entries</h1><ul id=\"logs\">";
+    std::deque<std::string> logs = logger.getLogs();
+    for (const auto& log : logs) {
+        body += "<li>";
+        body += log;
+        body += "</li>\n";
+    }
+    body += "</ul>";
+    servePage(request, "Logs", body, "log");
+}
+
+void handleMotorRequest(AsyncWebServerRequest* request) {
+    File file = SPIFFS.open("/motor.html", "r");
+    if (!file.available()) {
+        request->send(500, "text/plain", "Failed to open motor.html");
+        return;
+    }
+    String body = file.readString();
+    file.close();
+    servePage(request, "Motor Control", std::string(body.c_str()), "motor");
+}
+
+void handleAboutRequest(AsyncWebServerRequest* request) {
+    File file = SPIFFS.open("/about.html", "r");
+    if (!file.available()) {
+        request->send(500, "text/plain", "Failed to open about.html");
+        return;
+    }
+    String body = file.readString();
+    file.close();
+    servePage(request, "About", std::string(body.c_str()), "about");
 }
 
 void setupWeb() {
@@ -102,37 +159,13 @@ void setupWeb() {
     });
 
     // Serve the log page
-    server.on("/log", HTTP_GET, [](AsyncWebServerRequest* request) {
-        String html = R"rawliteral(
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>ESP Logs</title>
-                <script>
-                    var ws = new WebSocket('ws://' + location.host + '/ws');
-                    ws.onmessage = function(event) {
-                        var logList = document.getElementById('logs');
-                        var newLog = document.createElement('li');
-                        newLog.textContent = event.data;
-                        logList.appendChild(newLog);
-                    };
-                </script>
-            </head>
-            <body>
-                <h1>Log Entries</h1><ul id="logs"></ul>
-            </body>
-            </html>
-        )rawliteral";
-        std::string body = "<h1>Log Entries</h1><ul id=\"logs\">";
-        std::deque<std::string> logs = logger.getLogs();
-        for (const auto& log : logs) {
-            body += "<li>";
-            body += log;
-            body += "</li>\n";
-        }
-        body += "</ul>";
-        servePage(request, "Logs", body);
-    });
+    server.on("/log", HTTP_GET, handleLogRequest);
+
+    // Serve the motor page
+    server.on("/motor", HTTP_GET, handleMotorRequest);
+
+    // Serve the about page
+    server.on("/about", HTTP_GET, handleAboutRequest);
 
     server.onNotFound(notFound);
 

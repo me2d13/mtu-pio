@@ -13,6 +13,7 @@
 #include <ReactESP.h>
 #include "joy.h"
 #include "axis.h"
+#include "motor.h"
 
 using namespace reactesp;
 
@@ -58,6 +59,7 @@ void setup() {
 
     setupWeb();
     setupJoy();
+    setupMotor();
 
     Serial.println("\n##################################");
     Serial.println(F("ESP32 Information:"));

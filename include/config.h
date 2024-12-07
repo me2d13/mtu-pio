@@ -13,6 +13,14 @@
 #define SDA_PIN_SENSORS 3
 #define SCL_PIN_SENSORS 8
 
+#define PIN_UART_RX 4
+#define PIN_UART_TX 5
+
+
+#define PIN_MOTOR_ADDR_0 6
+#define PIN_MOTOR_ADDR_1 7
+#define PIN_MOTOR_ADDR_2 15
+
 #define NUMBER_OF_AXIS 6
 #define NUMBER_OF_BUTTONS 32
 #define X_AXIS 0
