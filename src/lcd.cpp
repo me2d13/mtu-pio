@@ -3,15 +3,23 @@
 #include "Logger.h"
 #include "net.h"
 #include "esp32/clk.h"
+#include "context.h"
 #include "axis.h"
 
 
+
 LCD_I2C lcd(0x27, 20, 4);
+
+void lcdAbout();
 
 void setupLcd(TwoWire& wire) {
     lcd.begin(&wire);
     lcd.display();
     lcd.backlight();
+
+    ctx()->eventLoop.onRepeat(1000, [] () {
+      lcdAbout();
+    });
 }
 
 void lcdAbout() {

@@ -38,7 +38,6 @@ void syncNtp() {
     // Initialize time via NTP
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     logger.log("Time synchronized with NTP server.");
-
     // Log initial time
     logger.log("Current time: " + getTimeStr());
 }

@@ -18,6 +18,7 @@ std::string Logger::log(const std::string &message)
 
     // Add the new log entry
     m_logs.push_back(logEntry);
+    Serial.println(logEntry.c_str());
 
     // Remove the oldest entry if we exceed the maximum size
     if (m_logs.size() > m_maxSize)

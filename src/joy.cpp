@@ -1,6 +1,8 @@
 #include <Joystick_ESP32S2.h>
 #include "Logger.h"
 #include "config.h"
+#include "context.h"
+#include "axis.h"
 
 Joystick_ joystick(JOYSTICK_DEFAULT_REPORT_ID, 
   JOYSTICK_TYPE_JOYSTICK, 32, 0,
@@ -10,6 +12,9 @@ Joystick_ joystick(JOYSTICK_DEFAULT_REPORT_ID,
 int lastAxis[NUMBER_OF_AXIS];
 u_char lastButtons[NUMBER_OF_BUTTONS];
 bool dirty = false;
+
+void setJoyAxis(int index, int value);
+void sendJoy();
 
 void setupJoy() {
 /*    USB.PID(0xDDFD);
@@ -30,6 +35,13 @@ void setupJoy() {
    joystick.sendState();
    for (int i = 0; i < NUMBER_OF_AXIS; i++) lastAxis[i] = 0;
    for (int i = 0; i < NUMBER_OF_BUTTONS; i++) lastButtons[i] = 0;
+
+   ctx()->eventLoop.onRepeat(100, [] () {
+      readAxisData();
+      setJoyAxis(X_AXIS, getAxisValue(0));
+      setJoyAxis(Y_AXIS, 0);
+      sendJoy();
+   });
 }
 
 void setJoyAxis(int index, int value) {
