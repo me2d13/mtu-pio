@@ -83,10 +83,11 @@ void notFound(AsyncWebServerRequest *request) {
 }
 
 std::string generateNav(const std::string& currentPage) {
-    std::string nav = "";
+    std::string nav = "<li><strong>MTU</strong></li>";
+    nav += "</ul><ul>";
     for (const auto& page : pages) {
         if (page.name == currentPage) {
-            nav += "<li><b>" + page.title + "</b></li>";
+            nav += "<li><button class=\"secondary\">" + page.title + "</button></li>";
         } else {
             nav += "<li><a href=\"" + page.link + "\">" + page.title + "</a></li>";
         }
@@ -98,13 +99,17 @@ void servePage(
     AsyncWebServerRequest* request,
     const std::string& title,
     const std::string& body,
-    const std::string& currentPage
+    const std::string& currentPage,
+    const std::string& jsFile = ""
     ) {
     AsyncResponseStream *response = request->beginResponseStream("text/html");
     response->print(html1);
     response->printf("<title>%s</title>", title.c_str());
+    if (!jsFile.empty()) {
+        response->printf("<script src=\"%s\"></script>", jsFile.c_str());
+    }
     response->print(html2);
-    response->printf("<header>%s</header>", title.c_str());
+    //response->printf("<header>%s</header>", title.c_str());
     response->print(html3);
     response->print(generateNav(currentPage).c_str());
     response->print(html4);
@@ -126,18 +131,18 @@ void handleLogRequest(AsyncWebServerRequest* request) {
 }
 
 void handleMotorRequest(AsyncWebServerRequest* request) {
-    File file = SPIFFS.open("/motor.html", "r");
+    File file = SPIFFS.open("/www/motor.html", "r");
     if (!file.available()) {
         request->send(500, "text/plain", "Failed to open motor.html");
         return;
     }
     String body = file.readString();
     file.close();
-    servePage(request, "Motor Control", std::string(body.c_str()), "motor");
+    servePage(request, "Motor Control", std::string(body.c_str()), "motor", "motor.js");
 }
 
 void handleAboutRequest(AsyncWebServerRequest* request) {
-    File file = SPIFFS.open("/about.html", "r");
+    File file = SPIFFS.open("/www/about.html", "r");
     if (!file.available()) {
         request->send(500, "text/plain", "Failed to open about.html");
         return;

@@ -1,0 +1,26 @@
+<fieldset>
+    <legend>Select motor:</legend>
+    <input type="radio" va="0" name="motorIndex" checked />
+    <label htmlFor="0">Throttle 1</label>
+    <input type="radio" id="1" name="motorIndex" />
+    <label htmlFor="1">Throttle 2</label>
+    <input type="radio" id="2" name="motorIndex" />
+    <label htmlFor="2">Speed brake</label>
+    <input type="radio" id="3" name="motorIndex" />
+    <label htmlFor="3">Trim</label>
+    <input type="radio" id="4" name="motorIndex" />
+    <label htmlFor="4">Trim indicator 1</label>
+    <input type="radio" id="5" name="motorIndex" />
+    <label htmlFor="5">Trim indicator 2</label>
+</fieldset>
+<article id="speed-section">
+    <header>Continuous run</header>
+    <label for="speed">Select speed
+      <input type="range" min="-100" max="100" value="0" id="speed" name="speed" />
+    </label>
+    <div class="grid">
+        <div><input type="number" id="speed-number" name="speed-number" placeholder="Speed" aria-label="Speed" value="0" /></div>
+        <div><button id="send-speed">Send</button></div>
+    </div>
+    <p id="feedback"></p>
+</article>
