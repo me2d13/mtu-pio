@@ -11,14 +11,12 @@
 #include "joy.h"
 #include "axis.h"
 #include "motor.h"
+#include "api.h"
+#include <ESPAsyncWebServer.h>
 
 GlobalContext instance;
 
-TwoWire _i2C1 = TwoWire(0); // all peripherals (LCD, 2017)
-TwoWire _i2C2 = TwoWire(1); // sensors
-
 GlobalContext::GlobalContext() {};
-
 
 // temporarly
 #define STEP_PIN 17
@@ -26,41 +24,48 @@ GlobalContext::GlobalContext() {};
 
 Motor *testMotor;
 
-void GlobalContext::setup() {
-    i2C1 = &_i2C1; // all peripherals (LCD, 2017)
-    i2C2 = &_i2C2; // sensors
-
+void GlobalContext::setup()
+{
     setupWifi();
     logger.log("IP Address: " + getIp());
     syncNtp();
 
-    i2C1->begin(SDA_PIN_LCD, SCL_PIN_LCD);
-    //delay(1000);
-    i2C2->begin(SDA_PIN_SENSORS, SCL_PIN_SENSORS);
-    //scanI2CBus(i2C1);
-    //scanI2CBus(i2C2);
-    setupLcd(*i2C1);
-    setupAxis(*i2C2);
-    lcdAbout();
+    i2cController = new I2cController();
+    i2cController->setup();
+
+    setupLcd();
+    logger.log("LCD initialized");
+    setupAxis();
+    logger.log("Axis initialized");
+    //lcdAbout();
 
     // Initialize SPIFFS
-    if(!SPIFFS.begin(true)){
-      Serial.println("An Error has occurred while mounting SPIFFS");
-      logger.log("An Error has occurred while mounting SPIFFS");
+    if (!SPIFFS.begin(true))
+    {
+        Serial.println("An Error has occurred while mounting SPIFFS");
+        logger.log("An Error has occurred while mounting SPIFFS");
     }
 
-    setupWeb();
+    server = setupWeb();
+    ApiController apiController(this);
     setupJoy();
     setupMotors();
 
     testMotor = new Motor(0, STEP_PIN, DIR_PIN);
     testMotor->init();
-    instance.eventLoop.onDelay(10000, []() {
-        testMotor->makeSteps(90, 20);
-        //testMotor->turnBySpeed(100);
-    });
+    instance.eventLoop.onDelay(10000, []()
+                               {
+                                   testMotor->makeSteps(90, 20);
+                                   // testMotor->turnBySpeed(100);
+                               });
 }
 
-GlobalContext* ctx() {
+AsyncWebServer *GlobalContext::getServer()
+{
+    return server;
+}
+
+GlobalContext *ctx()
+{
     return &instance;
 }

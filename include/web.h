@@ -1,3 +1,4 @@
 #pragma once
+#include <ESPAsyncWebServer.h>
 
-void setupWeb();
+AsyncWebServer* setupWeb();

@@ -5,21 +5,31 @@
 #include "esp32/clk.h"
 #include "context.h"
 #include "axis.h"
+#include "config.h"
+#include "i2c.h"
 
-
+#define PRINT_ABOUT 0
 
 LCD_I2C lcd(0x27, 20, 4);
 
 void lcdAbout();
 
-void setupLcd(TwoWire& wire) {
-    lcd.begin(&wire);
+void setupLcd() {
+    ctx()->i2c()->channel(I2C_CHANNEL_LCD);
+    //delay(100);
+    lcd.begin(ctx()->i2c()->peripherals());
     lcd.display();
     lcd.backlight();
+    //lcd.backlightOff();
 
-    ctx()->eventLoop.onRepeat(1000, [] () {
-      lcdAbout();
-    });
+    if (PRINT_ABOUT) {
+        ctx()->eventLoop.onRepeat(1000, [] () {
+            if (!ctx()->i2c()->isScanning(PERIPHERALS)) {
+                ctx()->i2c()->channel(I2C_CHANNEL_LCD);
+                lcdAbout();
+            }
+        });
+    }
 }
 
 void lcdAbout() {

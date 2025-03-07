@@ -2,13 +2,14 @@
 #include "AS5600.h"
 #include "joy.h"
 #include "config.h"
+#include "context.h"
 
 AS5600* sensor;
 
 int axisValues[NUMBER_OF_AXIS];
 
-void setupAxis(TwoWire& i2c) {
-    sensor = new AS5600(&i2c);
+void setupAxis() {
+    sensor = new AS5600(ctx()->i2c()->sensors());
     sensor->begin();
 }
 

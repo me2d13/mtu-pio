@@ -152,7 +152,7 @@ void handleAboutRequest(AsyncWebServerRequest* request) {
     servePage(request, "About", std::string(body.c_str()), "about");
 }
 
-void setupWeb() {
+AsyncWebServer* setupWeb() {
     server.serveStatic("/", SPIFFS, "/www/");
 
     server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -179,4 +179,6 @@ void setupWeb() {
     server.addHandler(&ws);
 
     server.begin();
+    logger.log("HTTP server started");
+    return &server;
 }

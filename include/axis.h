@@ -2,5 +2,5 @@
 #include <Wire.h>
 
 void readAxisData();
-void setupAxis(TwoWire& i2c);
+void setupAxis();
 int getAxisValue(int index);
