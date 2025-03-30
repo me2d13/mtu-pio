@@ -35,10 +35,6 @@
 
 #define OUTPUT_ADDRESS    0x01
 
-void setupMultiplexer() {
-    ctx()->pins.setup();
-}
-
 void MultiplexedPins::setup()
 {
     write(MCP23X17_IODIRA, 0x00, OUTPUT_ADDRESS); // set all pins to output
@@ -49,7 +45,7 @@ void MultiplexedPins::setup()
 void MultiplexedPins::scheduleSetup(TwoWire &wire, unsigned long delay)
 {
     this->wire = &wire;
-    pinsInitTask.set(TASK_IMMEDIATE, TASK_ONCE, setupMultiplexer);
+    pinsInitTask.set(TASK_IMMEDIATE, TASK_ONCE, [&]() { setup(); });
     ctx()->taskScheduler.addTask(pinsInitTask);
     pinsInitTask.enableDelayed(delay);
     logger.log("MCP23017 setup planned");

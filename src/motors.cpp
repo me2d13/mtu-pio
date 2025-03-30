@@ -12,12 +12,8 @@
 HardwareSerial motorSerial(1);
 TMC2208Stepper driver(&motorSerial, R_SENSE);
 
-void setupMotors() {
-    ctx()->motorsController.setup();
-}
-
 void MotorsController::scheduleSetup(unsigned long delay) {
-    motorsInitTask.set(TASK_IMMEDIATE, TASK_ONCE, setupMotors);
+    motorsInitTask.set(TASK_IMMEDIATE, TASK_ONCE, [&]() { setup(); });
     ctx()->taskScheduler.addTask(motorsInitTask);
     motorsInitTask.enableDelayed(delay);
     logger.log("Motors setup planned");
@@ -58,6 +54,12 @@ void MotorsController::handleApiCommand(int index, String command, AsyncWebServe
         int speed = jsonObj["parameters"]["speed"].as<int>();
         motors[index].turnBySpeed(speed);
         request->send(200, "text/plain", "Run at speed executed with speed " + String(speed));
+    } else if (command.equals("runSteps")) {
+        int angle = jsonObj["parameters"]["angle"].as<int>();
+        int rpm = jsonObj["parameters"]["rpm"].as<int>();
+        motors[index].makeSteps(angle, rpm);
+        String message = "Run steps executed with angle " + String(angle) + " and rpm " + String(rpm);
+        request->send(200, "text/plain", message);
     } else {
         request->send(400, "text/plain", "Unknown command " + command);
     }

@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sendSpeedButton = document.querySelector("#speed-section button");
     const enableButton = document.querySelector("#enable");
     const disableButton = document.querySelector("#disable");
+    const sendStepsButton = document.querySelector("#steps-section button");
 
     const selectedMotor = () => {
         let motor = 0;
@@ -65,10 +66,18 @@ document.addEventListener('DOMContentLoaded', function() {
     sendSpeedButton.addEventListener("click", () => sendPostCommand("runAtSpeed", "#speed-section", 
         {
             parameters: {
-                speed: document.getElementById('speed-number').value
+                speed: Number(document.getElementById('speed-number').value)
             }
         }));
-
+    sendStepsButton.addEventListener("click", () => sendPostCommand("runSteps", "#steps-section", 
+        {
+            parameters: {
+                angle: Number(document.getElementById('angle-number').value),
+                rpm: Number(document.getElementById('rpm-number').value),
+            }
+        }));
+    
+    
     // on ebale button click, send POST to /api/motors with command: "enable"
     enableButton.addEventListener("click", () => sendPostCommand("enable", "#enable-disable-section"));
     // on disable button click, send POST to /api/motors with command: "disable"

@@ -5,6 +5,7 @@
 #include <TMCStepper.h>
 #include "Logger.h"
 #include "context.h"
+#include <TaskSchedulerDeclarations.h>
 
 
 
@@ -14,7 +15,10 @@ Motor::Motor(int motorIndex, int step, int dir, int rmsCurrent, int steps)
       stepPin(step), 
       dirPin(dir), 
       rmsCurrent(rmsCurrent), 
-      microsteps(steps) {}
+      microsteps(steps) {
+    // Initialize the stepping task
+    steppingTask = new Task(0, TASK_ONCE, [&]() { stepCallback(); }, &ctx()->taskScheduler, false);
+      }
 
 // Getter implementations
 int Motor::getIndex() const { return index; }
@@ -31,7 +35,6 @@ void Motor::init(TMC2208Stepper *driver) {
     ctx()->motorsController.selectMotorUart(index);
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
-    delay(100);
 
     driver->begin();
     driver->toff(5);                 // Enables driver in software
@@ -64,8 +67,7 @@ void Motor::stepCallback() {
         std::stringstream ss;
         ss << "Motor " << index << " finished step turn";
         logger.log(ss.str());
-        //steppingEvent->remove(&ctx()->eventLoop);
-        //steppingEvent = NULL;
+        steppingTask->disable();
     } else {
         digitalWrite(stepPin, HIGH);
         digitalWrite(stepPin, LOW);
@@ -95,14 +97,16 @@ void Motor::makeSteps(int angle, int rpm) {
     ss << "MakeSteps: motor " << index << " - for " << static_cast<int>(stepsToMake) 
         << " steps to make calculated delay in ms between pulses: " << stepDelay;
     logger.log(ss.str());
-    /*if (steppingEvent != NULL) {
+    if (steppingTask->isEnabled()) {
         std::stringstream ss;
         ss << "Motor " << index << " active stepping event found, removing...";
         logger.log(ss.str());
-        steppingEvent->remove(&ctx()->eventLoop);
+        steppingTask->disable();
     }
     digitalWrite(dirPin, (stepsToMake > 0) ? HIGH : LOW);
-    steppingEvent = ctx()->eventLoop.onRepeat(stepDelay, [&]() { stepCallback(); }); */
+    steppingTask->setInterval(stepDelay);
+    steppingTask->setIterations(TASK_FOREVER);
+    steppingTask->enable();
 }
 
 void Motor::enable() {

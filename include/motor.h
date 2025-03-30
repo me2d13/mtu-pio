@@ -4,6 +4,8 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <TMCStepper.h>
+#include "TaskSchedulerDeclarations.h"
+
 
 
 class Motor {
@@ -15,7 +17,7 @@ private:
     int dirPin; 
     int stepDelay = 0;
     int stepsToMake = 0;
-    //reactesp::RepeatEvent* steppingEvent = NULL;
+    Task *steppingTask;
     TMC2208Stepper *driver;
 
 public:
