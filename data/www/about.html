@@ -1,1 +1,27 @@
 <i>MTU web interface</i>
+<hr />
+<button onclick="scanI2c(0)">Scan i2c</button>
+<hr />
+<button onclick="debugCall()">Debug call</button>
+
+<script>
+    function scanI2c(index) {
+        fetch(`/api/i2c-scan?index=${index}`, {
+            method: 'POST',
+        })
+            .then(response => response.json())
+            .then(data => {
+            console.log(data);
+            });
+        }
+
+        function debugCall() {
+        fetch(`/api/debug`, {
+            method: 'POST',
+        })
+            .then(response => response.json())
+            .then(data => {
+            console.log(data);
+            });
+        }
+</script>

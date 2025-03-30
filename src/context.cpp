@@ -7,37 +7,37 @@
 #include "i2c.h"
 #include <Wire.h>
 #include "lcd.h"
-#include <ReactESP.h>
+#include <TaskScheduler.h>
 #include "joy.h"
 #include "axis.h"
 #include "motor.h"
 #include "api.h"
+#include "pins.h"
+
+#ifdef ENABLE_HTTP_SERVER
 #include <ESPAsyncWebServer.h>
+#endif
 
 GlobalContext instance;
 
 GlobalContext::GlobalContext() {};
-
-// temporarly
-#define STEP_PIN 17
-#define DIR_PIN 18
-
-Motor *testMotor;
 
 void GlobalContext::setup()
 {
     setupWifi();
     logger.log("IP Address: " + getIp());
     syncNtp();
+    setupOTA();
 
     i2cController = new I2cController();
     i2cController->setup();
+    //pins.setup(*(i2cController->peripherals()));
+    pins.scheduleSetup(*(i2cController->peripherals()), 100);
 
     setupLcd();
-    logger.log("LCD initialized");
     setupAxis();
     logger.log("Axis initialized");
-    //lcdAbout();
+    lcdAbout();
 
     // Initialize SPIFFS
     if (!SPIFFS.begin(true))
@@ -46,18 +46,33 @@ void GlobalContext::setup()
         logger.log("An Error has occurred while mounting SPIFFS");
     }
 
+    #ifdef ENABLE_HTTP_SERVER
     server = setupWeb();
     ApiController apiController(this);
+    #endif
     setupJoy();
-    setupMotors();
+    motorsController.scheduleSetup(300); // must be after pins setup
+}
 
-    testMotor = new Motor(0, STEP_PIN, DIR_PIN);
-    testMotor->init();
-    instance.eventLoop.onDelay(10000, []()
-                               {
-                                   testMotor->makeSteps(90, 20);
-                                   // testMotor->turnBySpeed(100);
-                               });
+// registers port B
+#define MCP23X17_IODIRB   0x01
+#define MCP23X17_IPOLB    0x03
+#define MCP23X17_GPINTENB 0x05
+#define MCP23X17_DEFVALB  0x07
+#define MCP23X17_INTCONB  0x09
+#define MCP23X17_IOCONB   0x0B
+#define MCP23X17_GPPUB    0x0D
+#define MCP23X17_INTFB    0x0F
+#define MCP23X17_INTCAPB  0x11
+#define MCP23X17_GPIOB    0x13
+#define MCP23X17_OLATB    0x15
+
+void GlobalContext::debugCall()
+{
+    //pins.scheduleSetup(*(i2cController->peripherals()));
+    //motorsController.getMotor(0)->debugCall();
+    pins.read(MCP23X17_IODIRB);
+    //pins.write(MCP23X17_OLATB, 0x00);
 }
 
 AsyncWebServer *GlobalContext::getServer()

@@ -4,6 +4,8 @@
 #define WIFI_SSID ""
 #define WIFI_PASSWORD ""
 
+#define ENABLE_HTTP_SERVER 1
+
 #endif // CONFIG_H
 
 // Define I2C pins and frequency

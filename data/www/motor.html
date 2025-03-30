@@ -13,14 +13,34 @@
     <input type="radio" id="5" name="motorIndex" />
     <label htmlFor="5">Trim indicator 2</label>
 </fieldset>
-<article id="speed-section">
-    <header>Continuous run</header>
-    <label for="speed">Select speed
-      <input type="range" min="-100" max="100" value="0" id="speed" name="speed" />
+<details id="speed-section">
+    <summary>Continuous run</summary>
+    <label for="speed-range">Select speed
+      <input type="range" min="-100" max="100" value="0" id="speed-range" name="speed-range" />
     </label>
     <div class="grid">
         <div><input type="number" id="speed-number" name="speed-number" placeholder="Speed" aria-label="Speed" value="0" /></div>
-        <div><button id="send-speed">Send</button></div>
+        <div><button id="send-speed">Run</button></div>
     </div>
-    <p id="feedback"></p>
-</article>
+    <p class="feedback"></p>
+</details>
+<details id="steps-section">
+    <summary>Make steps</summary>
+    <label for="angle-range">Select angle
+      <input type="range" min="-360" max="360" value="0" id="angle-range" name="angle-range" />
+    </label>
+    <div class="grid">
+        <div><input type="number" id="angle-number" name="angle-number" placeholder="Angle" aria-label="Angle" value="0" /></div>
+        <div><input type="number" id="rpm-number" name="rpm-number" placeholder="Rpm" aria-label="Rpm" value="20" /></div>
+        <div><button id="send-speed">Run</button></div>
+    </div>
+    <p class="feedback"></p>
+</details>
+<details id="enable-disable-section">
+    <summary>Enable and disable</summary>
+    <div>
+        <div><button id="enable">Enable</button></div>
+        <div><button id="disable">Disable</button></div>
+    </div>
+    <p class="feedback"></p>
+</details>

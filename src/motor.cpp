@@ -5,14 +5,7 @@
 #include <TMCStepper.h>
 #include "Logger.h"
 #include "context.h"
-#include <ReactESP.h>
 
-
-HardwareSerial motorSerial(1);
-
-#define R_SENSE 0.11f
-
-TMC2208Stepper driver(&motorSerial, R_SENSE);
 
 
 // Constructor implementation
@@ -32,34 +25,47 @@ int Motor::getMicrosteps() const { return microsteps; }
 void Motor::setRmsCurrent(int rms) { rmsCurrent = rms; }
 void Motor::setMicrosteps(int steps) { microsteps = steps; }
 
-void Motor::init() {
-    selectMotor(index);
+void Motor::init(TMC2208Stepper *driver) {
+    disable();
+    this->driver = driver;
+    ctx()->motorsController.selectMotorUart(index);
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
+    delay(100);
 
-    driver.begin();
-    driver.toff(5);                 // Enables driver in software
-    driver.rms_current(rmsCurrent); // Set motor RMS current
-    driver.microsteps(microsteps);  // Set microsteps to 1/8th
+    driver->begin();
+    driver->toff(5);                 // Enables driver in software
+    driver->rms_current(rmsCurrent); // Set motor RMS current
+    driver->microsteps(microsteps);  // Set microsteps to 1/8th
 
-    driver.pwm_autoscale(true);     // Needed for stealthChop
+    driver->pwm_autoscale(true);     // Needed for stealthChop
 
-    uint8_t  version    = driver.version();
-    uint16_t microsteps = driver.microsteps();
+    uint8_t  version    = driver->version();
+    uint16_t microsteps = driver->microsteps();
     std::stringstream ss;
     ss << "Motor " << index << " performing init - Driver version: " << static_cast<int>(version) 
         << ", Microsteps: " << microsteps;
     logger.log(ss.str());
-    driver.VACTUAL(0);
+    driver->VACTUAL(0);
 }
+
+void Motor::debugCall() {
+    uint8_t  version    = driver->version();
+    uint16_t microsteps = driver->microsteps();
+    std::stringstream ss;
+    ss << "Motor " << index << " performing debug call - Driver version: " << static_cast<int>(version) 
+        << ", Microsteps: " << microsteps;
+    logger.log(ss.str());
+}
+
 
 void Motor::stepCallback() {
     if (stepsToMake == 0) {
         std::stringstream ss;
         ss << "Motor " << index << " finished step turn";
         logger.log(ss.str());
-        steppingEvent->remove(&ctx()->eventLoop);
-        steppingEvent = NULL;
+        //steppingEvent->remove(&ctx()->eventLoop);
+        //steppingEvent = NULL;
     } else {
         digitalWrite(stepPin, HIGH);
         digitalWrite(stepPin, LOW);
@@ -72,10 +78,11 @@ void Motor::stepCallback() {
 }
 
 void Motor::turnBySpeed(int speed) {
+    ctx()->motorsController.selectMotorUart(index);
     std::stringstream ss;
     ss << "Motor " << index << " running at speed " << static_cast<int>(speed);
     logger.log(ss.str());
-    driver.VACTUAL(microsteps == 0 ? speed : speed * microsteps);
+    driver->VACTUAL(microsteps == 0 ? speed : speed * microsteps);
 }
 
 void Motor::makeSteps(int angle, int rpm) {
@@ -88,25 +95,26 @@ void Motor::makeSteps(int angle, int rpm) {
     ss << "MakeSteps: motor " << index << " - for " << static_cast<int>(stepsToMake) 
         << " steps to make calculated delay in ms between pulses: " << stepDelay;
     logger.log(ss.str());
-    if (steppingEvent != NULL) {
+    /*if (steppingEvent != NULL) {
         std::stringstream ss;
         ss << "Motor " << index << " active stepping event found, removing...";
         logger.log(ss.str());
         steppingEvent->remove(&ctx()->eventLoop);
     }
     digitalWrite(dirPin, (stepsToMake > 0) ? HIGH : LOW);
-    steppingEvent = ctx()->eventLoop.onRepeat(stepDelay, [&]() { stepCallback(); });
+    steppingEvent = ctx()->eventLoop.onRepeat(stepDelay, [&]() { stepCallback(); }); */
 }
 
-void setupMotors() {
-    pinMode(PIN_MOTOR_ADDR_0, OUTPUT);
-    pinMode(PIN_MOTOR_ADDR_1, OUTPUT);
-    pinMode(PIN_MOTOR_ADDR_2, OUTPUT);
-    motorSerial.begin(115200, SERIAL_8N1, PIN_UART_RX, PIN_UART_TX);
+void Motor::enable() {
+    // GPB0 is index 8
+    logger.print("Enabling motor ");
+    logger.println(index);
+    ctx()->pins.setPin(index + 8, LOW);
+    // W21-15, R21-00, W21-13-00
 }
 
-void selectMotor(uint8_t addr) {
-    digitalWrite(PIN_MOTOR_ADDR_0, addr & 1);
-    digitalWrite(PIN_MOTOR_ADDR_1, (addr & 2) >> 1);
-    digitalWrite(PIN_MOTOR_ADDR_2, (addr & 4) >> 2);
+void Motor::disable() {
+    logger.print("Disabling motor ");
+    logger.println(index);
+    ctx()->pins.setPin(index + 8, HIGH);
 }

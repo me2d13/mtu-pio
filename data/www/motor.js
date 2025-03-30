@@ -1,14 +1,23 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const rangeInput = document.getElementById('speed');
-    const numberInput = document.getElementById('speed-number');
-    const sendSpeed = document.querySelector("#speed-section button");
+    const connectRangeInput = (rangeId, inputId) => {
+        const rangeInput = document.getElementById(rangeId);
+        const numberInput = document.getElementById(inputId);
+        rangeInput.addEventListener('input', function() {
+            numberInput.value = this.value;
+        });
+        numberInput.addEventListener('input', function() {
+            rangeInput.value = this.value;
+        });
+    }
+    connectRangeInput('speed-range', 'speed-number');
+    connectRangeInput('angle-range', 'angle-number');
+
     const motorindex = document.querySelectorAll('input[name="motorIndex"]');
+    const sendSpeedButton = document.querySelector("#speed-section button");
+    const enableButton = document.querySelector("#enable");
+    const disableButton = document.querySelector("#disable");
 
-    rangeInput.addEventListener('input', function() {
-        numberInput.value = this.value;
-    });
-
-    const pickMotor = () => {
+    const selectedMotor = () => {
         let motor = 0;
         for (var i = 0, length = motorindex.length; i < length; i++) {
             if (motorindex[i].checked) {
@@ -19,35 +28,49 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const setFeedback = (sectionName, message, color) => {
-        const element = document.querySelector(`#${sectionName} #feedback`);
+        const element = document.querySelector(`${sectionName} .feedback`);
         element.style.color = color;
         element.textContent = message;
 
     }
 
-    sendSpeed.addEventListener("click", () => {
-        const body = [
+    const sendPostCommand = (command, sectionName, extraBody) => {
+        const body = 
             {
-                command: "runAtSpeed",
-                index: pickMotor(),
-                parameters: {
-                    speed: numberInput.value
-                }
+                command,
+                index: selectedMotor(),
+                ...extraBody
+            };
+        console.log('Sending command ' + command, selectedMotor());
+        fetch(`/api/motors`, {
+            method: 'POST', 
+            body: JSON.stringify(body),
+            headers: {
+                'Content-Type': 'application/json'
             }
-        ];
-        console.log('Sending speed', pickMotor(), numberInput.value);
-        fetch(`/api/motors`, {method: 'POST', body: JSON.stringify(body)})
+        })
             .then(res => {
                 if (res.ok) {
-                    setFeedback('speed-section', 'OK', 'green');
+                    setFeedback(sectionName, 'OK', 'green');
                 } else {
                     console.error(res);
-                    setFeedback('speed-section', 'API error, see console', 'red');
+                    setFeedback(sectionName, 'API error, see console', 'red');
                 }
             })
             .catch(e => {
                 console.error(e);
-                setFeedback('speed-section', 'API error, see console', 'red');
+                setFeedback(sectionName, 'API error, see console', 'red');
             });
-    });
+    };
+    sendSpeedButton.addEventListener("click", () => sendPostCommand("runAtSpeed", "#speed-section", 
+        {
+            parameters: {
+                speed: document.getElementById('speed-number').value
+            }
+        }));
+
+    // on ebale button click, send POST to /api/motors with command: "enable"
+    enableButton.addEventListener("click", () => sendPostCommand("enable", "#enable-disable-section"));
+    // on disable button click, send POST to /api/motors with command: "disable"
+    disableButton.addEventListener("click", () => sendPostCommand("disable", "#enable-disable-section"));
 });

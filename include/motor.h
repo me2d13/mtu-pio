@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <HardwareSerial.h>
 #include <TMCStepper.h>
-#include <ReactESP.h>
+
 
 class Motor {
 private:
@@ -15,7 +15,8 @@ private:
     int dirPin; 
     int stepDelay = 0;
     int stepsToMake = 0;
-    reactesp::RepeatEvent* steppingEvent = NULL;
+    //reactesp::RepeatEvent* steppingEvent = NULL;
+    TMC2208Stepper *driver;
 
 public:
     // Constructor with default values for rmsCurrent and microsteps
@@ -30,17 +31,13 @@ public:
     void setRmsCurrent(int rms);
     void setMicrosteps(int steps);
 
-    void init();
+    void init(TMC2208Stepper *driver);
     void stepCallback();
     void turnBySpeed(int speed);
     void makeSteps(int numberOfSteps, int rpm);
+    void enable();
+    void disable();
+    void debugCall();
 };
-
-// Function declarations
-void setupMotors();
-void selectMotor(uint8_t addr);
-
-extern HardwareSerial motorSerial;
-extern TMC2208Stepper driver;
 
 #endif // MOTOR_H

@@ -36,12 +36,12 @@ void setupJoy() {
    for (int i = 0; i < NUMBER_OF_AXIS; i++) lastAxis[i] = 0;
    for (int i = 0; i < NUMBER_OF_BUTTONS; i++) lastButtons[i] = 0;
 
-   ctx()->eventLoop.onRepeat(100, [] () {
+   /*ctx()->eventLoop.onRepeat(100, [] () {
       readAxisData();
       setJoyAxis(X_AXIS, getAxisValue(0));
       setJoyAxis(Y_AXIS, 0);
       sendJoy();
-   });
+   });*/
 }
 
 void setJoyAxis(int index, int value) {

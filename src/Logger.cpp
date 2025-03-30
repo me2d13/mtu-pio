@@ -62,3 +62,38 @@ std::string Logger::getTimestamp() const
     strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &timeinfo);
     return std::string(timestamp);
 }
+
+void Logger::print(const std::string &message)
+{
+    // add message to buffer
+    for (char c : message)
+    {
+        m_lineBuffer[m_lineBufferIndex++] = c;
+    }
+}
+
+void Logger::println()
+{
+    // add newline to buffer
+    m_lineBuffer[m_lineBufferIndex++] = '\n';
+    // log buffer
+    log(std::string(m_lineBuffer, m_lineBufferIndex));
+    // clear buffer
+    m_lineBufferIndex = 0;
+}
+
+void Logger::println(const std::string &message)
+{
+    print(message);
+    println();
+}
+
+void Logger::print(const char *message)
+{
+    print(std::string(message));
+}
+
+void Logger::print(const char message)
+{
+    print(std::string(1, message));
+}

@@ -3,18 +3,23 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <ReactESP.h>
 #include <ESPAsyncWebServer.h>
 #include "i2c.h"
+#include <TaskSchedulerDeclarations.h>
+#include "pins.h"
+#include "motors.h"
 
 class GlobalContext {
 public:
   explicit GlobalContext();
-  reactesp::EventLoop eventLoop;
+  Scheduler taskScheduler;
   
   void setup();
   AsyncWebServer* getServer();
   I2cController* i2c() { return i2cController; };
+  MultiplexedPins pins;
+  MotorsController motorsController;
+  void debugCall();
 private:
   AsyncWebServer* server;
   I2cController* i2cController;
