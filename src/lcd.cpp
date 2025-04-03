@@ -9,7 +9,7 @@
 #include "i2c.h"
 #include <TaskSchedulerDeclarations.h>
 
-#define PRINT_ABOUT 0
+#define PRINT_ABOUT 1
 
 #define fullDEBUG(m) logger.log(m)
 #define serialDEBUG(m) Serial.println(m)
@@ -73,7 +73,7 @@ void lcdAbout() {
     }
     lcd.setCursor(0, 2);
     lcd.print("X:");
-    lcd.print(getAxisValue(0));
+    lcd.print(ctx()->axesController.getAxisValue(0));
     lcd.print("    ");
     DEBUG("Printing X done");
     lcd.setCursor(0, 3);

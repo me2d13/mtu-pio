@@ -8,6 +8,7 @@
 #include <TaskSchedulerDeclarations.h>
 #include "pins.h"
 #include "motors.h"
+#include "axis.h"
 
 class GlobalContext {
 public:
@@ -19,6 +20,7 @@ public:
   I2cController* i2c() { return i2cController; };
   MultiplexedPins pins;
   MotorsController motorsController;
+  AxesController axesController;
   void debugCall();
 private:
   AsyncWebServer* server;

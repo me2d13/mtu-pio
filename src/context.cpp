@@ -35,7 +35,7 @@ void GlobalContext::setup()
     pins.scheduleSetup(*(i2cController->peripherals()), 100);
 
     setupLcd();
-    setupAxis();
+    axesController.setup();
     logger.log("Axis initialized");
     lcdAbout();
 
