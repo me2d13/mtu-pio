@@ -9,11 +9,11 @@ ApiController::ApiController(GlobalContext *context) : server(context->getServer
       AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/api/motors", 
       [](AsyncWebServerRequest *request, JsonVariant &json) {
         JsonObject jsonObj = json.as<JsonObject>();
-        if (!jsonObj.containsKey("command")) {
+        if (!jsonObj["command"].is<String>()) {
             request->send(400, "application/json", "{\"error\":\"Missing command element\"}");
             return;
         }
-        if (!jsonObj.containsKey("index")) {
+        if (!jsonObj["index"].is<int>()) {
             request->send(400, "application/json", "{\"error\":\"Missing command index\"}");
             return;
         }

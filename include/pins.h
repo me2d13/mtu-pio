@@ -3,8 +3,6 @@
 #include "TaskSchedulerDeclarations.h"
 #include <Wire.h>
 
-#define PIN_OUT_PARK_LED 0
-
 class MultiplexedPins
 {
 private:

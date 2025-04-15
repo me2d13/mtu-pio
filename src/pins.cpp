@@ -35,11 +35,25 @@
 
 #define OUTPUT_ADDRESS    0x01
 
+Task inputPinsPollingTask;
+
+int last12VState = 3;
+
+void pollPins();
+
 void MultiplexedPins::setup()
 {
     write(MCP23X17_IODIRA, 0x00, OUTPUT_ADDRESS); // set all pins to output
     write(MCP23X17_IODIRB, 0x00, OUTPUT_ADDRESS); // set all pins to output
     logger.log("MCP23017 pin directions set");
+    pinMode(PIN_12V_IN, INPUT_PULLUP); // set 12V detect pin to input with pullup
+
+    //TODO: this should be pulled out of multiplexer class
+    inputPinsPollingTask.setInterval(500);
+    inputPinsPollingTask.setIterations(TASK_FOREVER);
+    inputPinsPollingTask.setCallback(pollPins);
+    ctx()->taskScheduler.addTask(inputPinsPollingTask);
+    inputPinsPollingTask.enableDelayed(500);
 }
 
 void MultiplexedPins::scheduleSetup(TwoWire &wire, unsigned long delay)
@@ -79,4 +93,16 @@ void MultiplexedPins::write(uint8_t addr, uint8_t value, uint8_t i2cAddress) {
 	wire->write(addr);
 	wire->write(value);
 	wire->endTransmission();
+}
+
+void pollPins() {
+    int current12VState = digitalRead(PIN_12V_IN);
+    if (current12VState != last12VState) {
+        last12VState = current12VState;
+        if (current12VState == LOW) {
+            logger.log("12V power detected");
+        } else {
+            logger.log("12V power lost");
+        }
+    }
 }

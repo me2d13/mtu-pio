@@ -18,6 +18,9 @@
 #define PIN_UART_RX 4
 #define PIN_UART_TX 5
 
+#define PIN_12V_IN 12
+#define PIN_OUT_PARK_LED 0
+
 
 #define PIN_MOTOR_ADDR_0 6
 #define PIN_MOTOR_ADDR_1 7
