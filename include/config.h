@@ -1,8 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define WIFI_SSID ""
-#define WIFI_PASSWORD ""
+// create secrets.h file with your WiFi credentials by copying secrets_template.h to secrets.h and filling in your credentials
+#include "secrets.h"
 
 #define ENABLE_HTTP_SERVER 1
 
