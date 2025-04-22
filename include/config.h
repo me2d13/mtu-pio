@@ -26,7 +26,7 @@
 #define PIN_MOTOR_ADDR_1 7
 #define PIN_MOTOR_ADDR_2 15
 
-#define NUMBER_OF_AXIS 6
+#define NUMBER_OF_AXIS 5
 #define NUMBER_OF_BUTTONS 32
 #define X_AXIS 0
 #define Y_AXIS 1
@@ -43,6 +43,14 @@
 #define MOTOR_TRIM_IND_2 5
 
 #define I2C_CHANNEL_LCD 5
+#define I2C_CHANNEL_THROTTLE_1 1
+#define I2C_CHANNEL_THROTTLE_2 2
+#define I2C_CHANNEL_SPEED_BRAKE 0
+#define I2C_CHANNEL_FLAPS 3
+#define I2C_CHANNEL_TRIM 4
+
+#define ENABLE_LCD 1
+#define ENABLE_SENSORS 1
 
 /*
                                                                               

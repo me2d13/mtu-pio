@@ -6,10 +6,19 @@
 #include "context.h"
 #include "Logger.h"
 
-u_int8_t axisI2cIndexes[] = {1};
+u_int8_t axisI2cIndexes[] = {
+    I2C_CHANNEL_THROTTLE_1, 
+    I2C_CHANNEL_THROTTLE_2,
+    I2C_CHANNEL_SPEED_BRAKE,
+    I2C_CHANNEL_FLAPS,
+    I2C_CHANNEL_TRIM};
 
 void AxesController::setup() {
-    ctx()->i2c()->channel(axisI2cIndexes[0]);
+    if (ENABLE_SENSORS == 0) {
+        logger.log("Axis setup skipped, ENABLE_SENSORS is 0");
+        return;
+    }
+    ctx()->i2c()->channel(axisI2cIndexes[4]);
     sensor = new AS5600(ctx()->i2c()->peripherals());
     if (sensor->begin()) {
         logger.log("Axis setup done OK");
@@ -23,18 +32,23 @@ void AxesController::setup() {
     measureIntervalStart = millis();
 }
 
+void AxesController::readSingleAxis(int index) {
+    ctx()->i2c()->channel(axisI2cIndexes[index]);
+    //delay(10); // wait for channel switch to settle
+    int value = sensor->rawAngle();
+    if (sensor->lastError() == AS5600_OK) {
+        ctx()->state.transient.setAxisValue(index, value);
+    } else {
+        ctx()->state.transient.setAxisValue(index, -1); // error value
+        ctx()->state.transient.incrementAxisReadFailures(index);
+    }
+}
 
 void AxesController::readAxisData() {
     uint32_t currentTime = millis();
     // iterate over all axis
-    for (int i = 0; i < 1 /*NUMBER_OF_AXIS*/; i++) {
-        ctx()->i2c()->channel(axisI2cIndexes[i]);
-        int value = sensor->rawAngle();
-        if (sensor->lastError() == AS5600_OK) {
-            axisValues[i] = value;
-        } else {
-            axisValues[i] = -1; // error value
-        }
+    for (int i = 0; i < NUMBER_OF_AXIS; i++) {
+        readSingleAxis(i);
     }
     measuredSamples++;
     measureTimeSpent += millis() - currentTime;
@@ -50,8 +64,4 @@ void AxesController::readAxisData() {
         measureIntervalStart = currentTime;
         measuredSamples = 0;
     }
-}
-
-int AxesController::getAxisValue(int index) {
-    return axisValues[index];
 }

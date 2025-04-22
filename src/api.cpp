@@ -3,6 +3,7 @@
 #include "ArduinoJson.h"
 #include "Logger.h"
 #include "context.h"
+#include "state.h"
 
 ApiController::ApiController(GlobalContext *context) : server(context->getServer()), context(context)
 {
@@ -44,10 +45,27 @@ ApiController::ApiController(GlobalContext *context) : server(context->getServer
         request->send(200, "text/plain", "I2c scan started for bus " + index);
       });
 
+      // curl -X POST http://192.168.1.112/api/debug?index=1 
       server->on("/api/debug", HTTP_POST, [](AsyncWebServerRequest *request) {
         logger.log("Starting debug call");
-        ctx()->debugCall();
+        int index = 0;
+        if (request->hasParam("index")) {
+          String indexStr = request->getParam("index")->value();
+          if (indexStr.length() > 0) {
+            index = indexStr.toInt();
+          }
+        }
+        ctx()->debugCall(index);
         logger.log("Debug call done");
         request->send(200, "text/plain", "Debug call done");
+      });
+
+      server->on("/api/state", HTTP_GET, [](AsyncWebServerRequest *request) {
+        logger.log("Logging state on API request");
+        String state = "{";
+        state += "\"transient\":" + ctx()->state.transient.reportState() + ",";
+        state += "\"persisted\":" + ctx()->state.persisted.reportState() + "}";
+        request->send(200, "application/json", state);
+        logger.log("Logging state done");
       });
 }

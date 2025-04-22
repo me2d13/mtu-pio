@@ -2,6 +2,7 @@
 #include "pins.h"
 #include "Logger.h"
 #include "context.h"
+#include "state.h"
 
 #define MCP23X17_ADDRESS  0x20
 
@@ -101,8 +102,10 @@ void pollPins() {
         last12VState = current12VState;
         if (current12VState == LOW) {
             logger.log("12V power detected");
+            ctx()->state.transient.set12Vpresent(true);
         } else {
             logger.log("12V power lost");
+            ctx()->state.transient.set12Vpresent(false);
         }
     }
 }

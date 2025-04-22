@@ -9,6 +9,7 @@
 #include "pins.h"
 #include "motors.h"
 #include "axis.h"
+#include "state.h"
 
 class GlobalContext {
 public:
@@ -21,7 +22,8 @@ public:
   MultiplexedPins pins;
   MotorsController motorsController;
   AxesController axesController;
-  void debugCall();
+  State state;
+  void debugCall(int index);
 private:
   AsyncWebServer* server;
   I2cController* i2cController;

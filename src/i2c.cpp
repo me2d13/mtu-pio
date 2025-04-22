@@ -38,6 +38,7 @@ void I2cController::setup() {
     if (i2cMultiplexer->begin() == false)
     {
         logger.log("An Error has occurred while initializing I2C Multiplexer");
+        ctx()->state.transient.incrementI2cChannelSwitchFailures();
     } else {
         logger.log("I2C Multiplexer initialized");
     }
@@ -89,5 +90,9 @@ void I2cController::startScan(uint8_t busIndex) {
 }
 
 void I2cController::channel(uint8_t channel) {
-    i2cMultiplexer->selectChannel(channel);
+    // logger.log(("Switching I2C channel to " + String(channel)).c_str());
+    bool success = i2cMultiplexer->selectChannel(channel);
+    if (!success) {
+        ctx()->state.transient.incrementI2cChannelSwitchFailures();
+    }
 }

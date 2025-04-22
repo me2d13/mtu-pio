@@ -10,7 +10,6 @@
 #define R_SENSE 0.11f
 
 HardwareSerial motorSerial(1);
-TMC2208Stepper driver(&motorSerial, R_SENSE);
 
 void MotorsController::scheduleSetup(unsigned long delay) {
     motorsInitTask.set(TASK_IMMEDIATE, TASK_ONCE, [&]() { setup(); });
@@ -25,10 +24,11 @@ void MotorsController::setup() {
     pinMode(PIN_MOTOR_ADDR_1, OUTPUT);
     pinMode(PIN_MOTOR_ADDR_2, OUTPUT);
     logger.log("Motors UART addr bits configured");
-    /*for (int i = 0; i < MOTORS_COUNT; i++) {
-        motors[i].init(&driver);
-    }*/
-    motors[0].init(&driver);
+    //for (int i = 0; i < MOTORS_COUNT; i++) {
+    for (int i = 0; i < 1; i++) {
+        TMC2208Stepper *driver = new TMC2208Stepper(&motorSerial, R_SENSE);
+        motors[i].init(driver);
+    }
 }
 
 void MotorsController::selectMotorUart(uint8_t addr) {

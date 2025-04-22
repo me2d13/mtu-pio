@@ -67,11 +67,12 @@ void GlobalContext::setup()
 #define MCP23X17_GPIOB    0x13
 #define MCP23X17_OLATB    0x15
 
-void GlobalContext::debugCall()
+void GlobalContext::debugCall(int index)
 {
     //pins.scheduleSetup(*(i2cController->peripherals()));
     //motorsController.getMotor(0)->debugCall();
-    pins.read(MCP23X17_IODIRB);
+    //pins.read(MCP23X17_IODIRB);
+    axesController.readSingleAxis(index);
     //pins.write(MCP23X17_OLATB, 0x00);
 }
 

@@ -9,8 +9,6 @@
 #include "i2c.h"
 #include <TaskSchedulerDeclarations.h>
 
-#define PRINT_ABOUT 1
-
 #define fullDEBUG(m) logger.log(m)
 #define serialDEBUG(m) Serial.println(m)
 #define DEBUG(m) // Serial.println(m)
@@ -22,6 +20,10 @@ Task lcdTask;
 void lcdAbout();
 
 void setupLcd() {
+    if (ENABLE_LCD == 0) {
+        logger.log("Lcs setup skipped, ENABLE_LCD is 0");
+        return;
+    }
     DEBUG("Setting up LCD, selecting channel");
     ctx()->i2c()->channel(I2C_CHANNEL_LCD);
     DEBUG("Channel seleced, initializing LCD");
@@ -34,22 +36,20 @@ void setupLcd() {
     DEBUG("LCD backlight on");
     //lcd.backlightOff();
 
-    if (PRINT_ABOUT) {
-        lcdTask.setInterval(1000);
-        lcdTask.setIterations(TASK_FOREVER);
-        lcdTask.setCallback([]() {
-            if (!ctx()->i2c()->isScanning(PERIPHERALS)) {
-                ctx()->i2c()->channel(I2C_CHANNEL_LCD);
-                lcdAbout();
-            }
-        });
-        ctx()->taskScheduler.addTask(lcdTask);
-        lcdTask.enable();
-        lcd.clear();
-        DEBUG("LCD clear done");
-        lcdAbout();
-        DEBUG("LCD about printed");
-    }
+    lcdTask.setInterval(1000);
+    lcdTask.setIterations(TASK_FOREVER);
+    lcdTask.setCallback([]() {
+        if (!ctx()->i2c()->isScanning(PERIPHERALS)) {
+            ctx()->i2c()->channel(I2C_CHANNEL_LCD);
+            lcdAbout();
+        }
+    });
+    ctx()->taskScheduler.addTask(lcdTask);
+    lcdTask.enable();
+    lcd.clear();
+    DEBUG("LCD clear done");
+    lcdAbout();
+    DEBUG("LCD about printed");
 }
 
 void lcdAbout() {
@@ -73,12 +73,10 @@ void lcdAbout() {
     }
     lcd.setCursor(0, 2);
     lcd.print("X:");
-    lcd.print(ctx()->axesController.getAxisValue(0));
+    lcd.print(ctx()->state.transient.getAxisValue(0));
     lcd.print("    ");
-    DEBUG("Printing X done");
     lcd.setCursor(0, 3);
     lcd.print(getTimeStr().c_str());
-    DEBUG("Printing time done");
 }
 
 void displaySlowClockCalibration() { uint32_t slow_clk_cal = esp_clk_slowclk_cal_get(); Serial.print("Slow Clock Calibration Value: "); Serial.print(slow_clk_cal); Serial.println(" microseconds"); }
