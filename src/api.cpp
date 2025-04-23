@@ -5,6 +5,9 @@
 #include "context.h"
 #include "state.h"
 
+// example of post request
+// curl -X POST http://192.168.1.112/api/motors -H 'Content-Type: application/json' -d '{"command":"moveToPosition","index":0, "parameters":{"position":5000}}'
+
 ApiController::ApiController(GlobalContext *context) : server(context->getServer()), context(context)
 {
       AsyncCallbackJsonWebHandler *handler = new AsyncCallbackJsonWebHandler("/api/motors", 

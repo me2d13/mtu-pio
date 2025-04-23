@@ -78,6 +78,18 @@ String PersistedState::reportState() {
             state += ",";
         }
     }
+    state += "],";
+    state += "\"motorSettings\":[";
+    for (int i = 0; i < MOTORS_COUNT; i++) {
+        state += "{";
+        state += "\"name\":\"" + String(motorSettings[i].name) + "\",";
+        state += "\"runCurrent\":" + String(motorSettings[i].runCurrent) + ",";
+        state += "\"microSteps\":" + String(motorSettings[i].microSteps);
+        state += "}";
+        if (i < MOTORS_COUNT - 1) {
+            state += ",";
+        }
+    }
     state += "]}";
     return state;
 }

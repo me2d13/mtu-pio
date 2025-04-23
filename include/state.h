@@ -14,6 +14,13 @@ struct axis_settings
     bool isReversed;
 };
 
+struct motor_settings
+{
+    int runCurrent;
+    int microSteps;
+    char name[6];
+};
+
 
 class PersistedState
 {
@@ -25,6 +32,14 @@ public:
         {2505, 846, "THR2", false},
         {0, 4096, "FLAPS", false},
         {0, 4096, "TRIM", false}
+    };
+    motor_settings motorSettings[MOTORS_COUNT] = {
+        {400, 4, "THR1"},
+        {200, 4, "THR2"},
+        {100, 4, "SB"},
+        {100, 1, "TRIM"},
+        {100, 1, "TRI1"},
+        {100, 1, "TRI2"}
     };
 String reportState();
 };

@@ -7,27 +7,21 @@
 #include "context.h"
 #include <TaskSchedulerDeclarations.h>
 
-
+int calculateMoveSpeed(long currentPosition, long targetPosition);
 
 // Constructor implementation
-Motor::Motor(int motorIndex, int step, int dir, int rmsCurrent, int steps) 
+Motor::Motor(int motorIndex, int step, int dir) 
     : index(motorIndex), 
       stepPin(step), 
-      dirPin(dir), 
-      rmsCurrent(rmsCurrent), 
-      microsteps(steps) {
-    // Initialize the stepping task
-    steppingTask = new Task(0, TASK_ONCE, [&]() { stepCallback(); }, &ctx()->taskScheduler, false);
+      dirPin(dir) {
+        // Initialize the stepping task
+        steppingTask = new Task(0, TASK_ONCE, [&]() { stepCallback(); }, &ctx()->taskScheduler, false);
+        movingTask = new Task(100, TASK_FOREVER, [&]() { moveCallback(); }, &ctx()->taskScheduler, false);
+        settings = &ctx()->state.persisted.motorSettings[motorIndex];
       }
 
 // Getter implementations
 int Motor::getIndex() const { return index; }
-int Motor::getRmsCurrent() const { return rmsCurrent; }
-int Motor::getMicrosteps() const { return microsteps; }
-
-// Setter implementations
-void Motor::setRmsCurrent(int rms) { rmsCurrent = rms; }
-void Motor::setMicrosteps(int steps) { microsteps = steps; }
 
 void Motor::init(TMC2208Stepper *driver) {
     disable();
@@ -38,8 +32,8 @@ void Motor::init(TMC2208Stepper *driver) {
 
     driver->begin();
     driver->toff(5);                 // Enables driver in software
-    driver->rms_current(rmsCurrent); // Set motor RMS current
-    driver->microsteps(microsteps);  // Set microsteps to 1/8th
+    driver->rms_current(settings->runCurrent); // Set motor RMS current
+    driver->microsteps(settings->microSteps);  // Set microsteps to 1/8th
 
     driver->pwm_autoscale(true);     // Needed for stealthChop
 
@@ -79,16 +73,48 @@ void Motor::stepCallback() {
     }
 }
 
+void Motor::moveCallback() {
+    if (axisIndex == -1) {
+        return;
+    }
+    long currentPosition = ctx()->state.transient.getCalibratedAxisValue(axisIndex, &ctx()->state.persisted.axisSettings[axisIndex]);
+    auto speed = calculateMoveSpeed(currentPosition, targetPosition);
+    if (speed == 0) {
+        std::stringstream ss;
+        ss << "Motor " << index << " reached target position " << static_cast<int>(targetPosition);
+        logger.log(ss.str());
+        driver->VACTUAL(0);
+        movingSpeed = 0;
+        movingTask->disable();
+        disable();
+    } else {
+        if (sensorReversed) {
+            speed = -speed;
+        }
+        if (movingSpeed != speed) {
+            // just decelerate as running closer
+            turnBySpeed(speed);
+            movingSpeed = speed;
+        }
+    }
+}
+
 void Motor::turnBySpeed(int speed) {
     ctx()->motorsController.selectMotorUart(index);
     std::stringstream ss;
     ss << "Motor " << index << " running at speed " << static_cast<int>(speed);
     logger.log(ss.str());
-    driver->VACTUAL(microsteps == 0 ? speed : speed * microsteps);
+    driver->VACTUAL(settings->microSteps == 0 ? speed : speed * settings->microSteps);
+    if (speed == 0) {
+        // also disable moving task
+        if (movingTask->isEnabled()) {
+            movingTask->disable();
+        }
+    }
 }
 
 void Motor::makeSteps(int angle, int rpm) {
-    int microstepsOrOne = (microsteps == 0) ? 1 : microsteps;
+    int microstepsOrOne = (settings->microSteps == 0) ? 1 : settings->microSteps;
     stepsToMake = (200 * angle * microstepsOrOne) / 360;
     int pulsesByRevolution = 200 * microstepsOrOne;
     float stepsPerSecond = rpm * pulsesByRevolution / 60.0;
@@ -121,4 +147,51 @@ void Motor::disable() {
     logger.print("Disabling motor ");
     logger.println(index);
     ctx()->pins.setPin(index + 8, HIGH);
+}
+
+int calculateMoveSpeed(long currentPosition, long targetPosition) {
+    long distance = abs(targetPosition - currentPosition);
+    int speed = 0;
+    if (distance < AXIS_MAX_CALIBRATED_VALUE / 200) { // 0.5% of the range
+        return 0;
+    } else if (distance < AXIS_MAX_CALIBRATED_VALUE / 100) { // 1% of the range
+        speed = 10;
+    } else if (distance < AXIS_MAX_CALIBRATED_VALUE / 10) { // 10% of the range
+        speed = 30;
+    } else {
+        speed = 50;
+    }
+    return (currentPosition < targetPosition) ? speed : -speed;
+}
+
+void Motor::moveToPosition(long position) {
+    if (axisIndex == -1) {
+        std::stringstream ss;
+        ss << "Motor " << index << " has no axis assigned, cannot move to position " << static_cast<int>(position);
+        logger.log(ss.str());
+        return;
+    }
+    long currentPosition = ctx()->state.transient.getCalibratedAxisValue(axisIndex, &ctx()->state.persisted.axisSettings[axisIndex]);
+    auto speed = calculateMoveSpeed(currentPosition, position);
+    if (speed == 0) {
+        std::stringstream ss;
+        ss << "Motor " << index << " already at target position " << static_cast<int>(position);
+        logger.log(ss.str());
+        return;
+    }
+    if (sensorReversed) {
+        speed = -speed;
+    }
+    movingSpeed = speed;
+    enable();
+    turnBySpeed(speed);
+    targetPosition = position;
+    // start the task to watch position
+    if (!movingTask->isEnabled()) {
+        movingTask->enable();
+    }
+    std::stringstream ss;
+    ss << "Motor " << index << " currently at position " << static_cast<int>(currentPosition) << " started moving to position " 
+        << static_cast<int>(position) << " at speed " << static_cast<int>(speed);
+    logger.log(ss.str());
 }

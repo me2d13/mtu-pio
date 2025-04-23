@@ -29,6 +29,8 @@ void MotorsController::setup() {
         TMC2208Stepper *driver = new TMC2208Stepper(&motorSerial, R_SENSE);
         motors[i].init(driver);
     }
+    // add sensors to motors for THR1 and THR2
+    motors[MOTOR_THR1].addSensor(2, false);
 }
 
 void MotorsController::selectMotorUart(uint8_t addr) {
@@ -60,6 +62,10 @@ void MotorsController::handleApiCommand(int index, String command, AsyncWebServe
         motors[index].makeSteps(angle, rpm);
         String message = "Run steps executed with angle " + String(angle) + " and rpm " + String(rpm);
         request->send(200, "text/plain", message);
+    } else if (command.equals("moveToPosition")) {
+        long position = jsonObj["parameters"]["position"].as<long>();
+        motors[index].moveToPosition(position);
+        request->send(200, "text/plain", "Run to position executed with position " + String(position));
     } else {
         request->send(400, "text/plain", "Unknown command " + command);
     }

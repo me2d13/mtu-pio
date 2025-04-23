@@ -1,17 +1,10 @@
 #pragma once
 #include <Arduino.h>
 #include "TaskSchedulerDeclarations.h"
+#include "config.h"
 #include "Motor.h"
 #include "ArduinoJson.h"
 #include <ESPAsyncWebServer.h>
-
-#define MOTORS_COUNT 6
-#define MOTOR_THR1 0
-#define MOTOR_THR2 1
-#define MOTOR_SPEED_BRAKE 2
-#define MOTOR_TRIM 3
-#define MOTOR_TRIM_IND_1 4
-#define MOTOR_TRIM_IND_2 5
 
 class MotorsController
 {

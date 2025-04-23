@@ -32,12 +32,14 @@
 #define RX_AXIS 3
 #define RY_AXIS 4
 
-#define MOTOR_THR_1 0
-#define MOTOR_THR_2 1
+#define MOTORS_COUNT 6
+#define MOTOR_THR1 0
+#define MOTOR_THR2 1
 #define MOTOR_SPEED_BRAKE 2
 #define MOTOR_TRIM 3
 #define MOTOR_TRIM_IND_1 4
 #define MOTOR_TRIM_IND_2 5
+
 
 #define I2C_CHANNEL_LCD 5
 #define I2C_CHANNEL_THROTTLE_1 1
