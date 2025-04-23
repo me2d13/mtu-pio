@@ -6,3 +6,4 @@ std::string getIp();
 std::string getTimeStr();
 void syncNtp();
 void setupOTA();
+bool isOtaUploadInProgress();

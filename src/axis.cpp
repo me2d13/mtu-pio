@@ -7,9 +7,9 @@
 #include "Logger.h"
 
 u_int8_t axisI2cIndexes[] = {
+    I2C_CHANNEL_SPEED_BRAKE,
     I2C_CHANNEL_THROTTLE_1, 
     I2C_CHANNEL_THROTTLE_2,
-    I2C_CHANNEL_SPEED_BRAKE,
     I2C_CHANNEL_FLAPS,
     I2C_CHANNEL_TRIM};
 
@@ -25,7 +25,12 @@ void AxesController::setup() {
     } else {
         logger.log("Axis setup failed");
     }
-    axesCheckTask.set(10, TASK_FOREVER, [&]() { readAxisData(); });
+    axesCheckTask.set(10, TASK_FOREVER, [&]() { 
+        readAxisData(); 
+        if (ENABLE_JOYSTICK) {
+            readStateDataAndSendJoy();
+        }
+    });
     ctx()->taskScheduler.addTask(axesCheckTask);
     axesCheckTask.enableDelayed(1000); // 1 second delay for setup
     logger.log("Axis reading task scheduled");
@@ -64,4 +69,46 @@ void AxesController::readAxisData() {
         measureIntervalStart = currentTime;
         measuredSamples = 0;
     }
+}
+
+long calculateCalibratedValue(int value, axis_settings *settings) {
+    bool overflowsInMeasuredRange = (settings->isReversed) ? 
+        (settings->minValue < settings->maxValue) : 
+        (settings->minValue > settings->maxValue);
+    if (!settings->isReversed) {
+        if (!overflowsInMeasuredRange) {
+            // the simplest case, no reverse, no overflow, just use mapping
+            value = constrain(value, settings->minValue, settings->maxValue);
+            return map(value, settings->minValue, settings->maxValue, 0, AXIS_MAX_CALIBRATED_VALUE);
+        } else {
+            // constrain, we have e.g. range from min=2505 to max=846. Anything between 846 and 2505 is invalid then
+            if (value > settings->maxValue && value < settings->minValue) {
+                // round the value to the closest valid value
+                if (value - settings->maxValue < settings->minValue - value) {
+                    value = settings->maxValue;
+                } else {
+                    value = settings->minValue;
+                }
+            }
+            // the axis is not reversed but the value overflows from 4095 to 0
+            value = (value + 4096 - settings->minValue) % 4096;
+            // range is below 4096 part plus above 0 part
+            int range = (4096 - settings->minValue) + settings->maxValue;
+            // now the value is in the range of 0 to range, we can use mapping
+            return map(value, 0, range, 0, AXIS_MAX_CALIBRATED_VALUE);
+        }
+    } else {
+        if (overflowsInMeasuredRange) {
+            // the axis is reversed and the value overflows from 4095 to 0
+            value = (value + 4096 - settings->maxValue) % 4096;
+            // range is below 4096 part plus above 0 part
+            int range = (4096 - settings->maxValue) + settings->minValue;
+            // now the value is in the range of 0 to range, we can use mapping
+            return map(value, 0, range, 0, AXIS_MAX_CALIBRATED_VALUE);
+        } else {
+            value = constrain(value, settings->maxValue, settings->minValue);
+            // the axis is reversed and the value is in the range of minValue and maxValue
+            return map(value, settings->maxValue, settings->minValue, 0, AXIS_MAX_CALIBRATED_VALUE);
+        }
+    }    
 }

@@ -4,8 +4,6 @@
 // create secrets.h file with your WiFi credentials by copying secrets_template.h to secrets.h and filling in your credentials
 #include "secrets.h"
 
-#define ENABLE_HTTP_SERVER 1
-
 #endif // CONFIG_H
 
 // Define I2C pins and frequency
@@ -28,12 +26,11 @@
 
 #define NUMBER_OF_AXIS 5
 #define NUMBER_OF_BUTTONS 32
-#define X_AXIS 0
-#define Y_AXIS 1
-#define Z_AXIS 2
+#define X_AXIS 1
+#define Y_AXIS 2
+#define Z_AXIS 0
 #define RX_AXIS 3
 #define RY_AXIS 4
-#define RZ_AXIS 5
 
 #define MOTOR_THR_1 0
 #define MOTOR_THR_2 1
@@ -51,6 +48,10 @@
 
 #define ENABLE_LCD 1
 #define ENABLE_SENSORS 1
+#define ENABLE_HTTP_SERVER 1
+#define ENABLE_JOYSTICK 1
+
+#define AXIS_MAX_CALIBRATED_VALUE 10000
 
 /*
                                                                               

@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include "TaskSchedulerDeclarations.h"
 #include "config.h"
+#include "state.h"
 #include <AS5600.h>
 
 class AxesController
@@ -17,3 +18,5 @@ public:
     void readSingleAxis(int index);
     void setup();
 };
+
+long calculateCalibratedValue(int value, axis_settings *settings);

@@ -46,11 +46,13 @@ void GlobalContext::setup()
         logger.log("An Error has occurred while mounting SPIFFS");
     }
 
-    #ifdef ENABLE_HTTP_SERVER
-    server = setupWeb();
-    ApiController apiController(this);
-    #endif
-    setupJoy();
+    if (ENABLE_HTTP_SERVER) {
+        server = setupWeb();
+        ApiController apiController(this);
+    }
+    if (ENABLE_JOYSTICK) {
+        setupJoy();
+    }
     motorsController.scheduleSetup(300); // must be after pins setup
 }
 

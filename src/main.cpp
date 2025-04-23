@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "context.h"
 #include <ArduinoOTA.h>
+#include "net.h"
 
 #define BASIC_TEST 0
 
@@ -40,7 +41,9 @@ void loop() {
         digitalWrite(2, LOW);
         delay(100);
     } else {
-        ctx()->taskScheduler.execute();
+        if (!isOtaUploadInProgress()) {
+            ctx()->taskScheduler.execute();
+        }
         ArduinoOTA.handle();
     }
 }

@@ -10,6 +10,7 @@
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600; // GMT offset in seconds (e.g., +1 for UTC+1)
 const int daylightOffset_sec = 0; //3600; // Daylight savings offset in seconds (adjust if needed)
+bool otaUploadInProgress = false;
 
 void setupWifi() {
     WiFi.mode(WIFI_STA);
@@ -56,9 +57,11 @@ void setupOTA() {
         // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
         logger.print("Start updating ");
         logger.println(type.c_str());
+        otaUploadInProgress = true;
     });
     ArduinoOTA.onEnd([]() {
         logger.println("End");
+        otaUploadInProgress = false;
     });
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
         Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
@@ -76,6 +79,11 @@ void setupOTA() {
         } else if (error == OTA_END_ERROR) {
             logger.println("End Failed");
         }
+        otaUploadInProgress = false;
     });
     ArduinoOTA.begin();
+}
+
+bool isOtaUploadInProgress() {
+    return otaUploadInProgress;
 }

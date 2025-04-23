@@ -4,9 +4,16 @@
 #include "context.h"
 #include "axis.h"
 
+/* 
+
+When joystick is enabled in platformio.ini, I have new COM8 Serial + HID device. Upload via OTA or boot button
+Without joystick, I have COM11 Serial as upload port. 
+COM9 is present in both scenarios
+*/
+
 Joystick_ joystick(JOYSTICK_DEFAULT_REPORT_ID, 
   JOYSTICK_TYPE_JOYSTICK, 32, 0,
-  true, true, true, true, true, true, // x, y, z, rx, ry, rz
+  true, true, true, true, true, false, // x, y, z, rx, ry, rz
   false, false, false, false, false); 
 
 int lastAxis[NUMBER_OF_AXIS];
@@ -24,24 +31,30 @@ void setupJoy() {
     USB.begin();
     */
    logger.log("Setting up joystick...");
-    joystick.setXAxisRange(0, 4095);
-    joystick.setYAxisRange(0, 4095);
-    joystick.setZAxisRange(0, 4095);
-    joystick.setRxAxisRange(0, 4095);
-    joystick.setRyAxisRange(0, 4095);
-    joystick.setRzAxisRange(0, 4095);
+    joystick.setXAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
+    joystick.setYAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
+    joystick.setZAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
+    joystick.setRxAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
+    joystick.setRyAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
     joystick.begin(false);
    logger.log("Joystick started");
    joystick.sendState();
    for (int i = 0; i < NUMBER_OF_AXIS; i++) lastAxis[i] = 0;
    for (int i = 0; i < NUMBER_OF_BUTTONS; i++) lastButtons[i] = 0;
+}
 
-   /*ctx()->eventLoop.onRepeat(100, [] () {
-      readAxisData();
-      setJoyAxis(X_AXIS, getAxisValue(0));
-      setJoyAxis(Y_AXIS, 0);
-      sendJoy();
-   });*/
+void readStateDataAndSendJoy() {
+    // read axis data from the sensors
+    for (int i = 0; i < NUMBER_OF_AXIS; i++) {
+        int value = ctx()->state.transient.getAxisValue(i);
+        if (value != -1) {
+            setJoyAxis(i, ctx()->state.transient.getCalibratedAxisValue(i, &ctx()->state.persisted.axisSettings[i]));
+        }
+    }
+    // read button data from the buttons
+    //for (int i = 0; i < NUMBER_OF_BUTTONS; i++) {
+    //    int value = ctx()->state.transient.getButtonValue(i);
+    sendJoy();
 }
 
 void setJoyAxis(int index, int value) {
@@ -69,10 +82,6 @@ void setJoyAxis(int index, int value) {
     
     case RY_AXIS:
       joystick.setRyAxis(value);
-      break;
-    
-    case RZ_AXIS:
-      joystick.setRzAxis(value);
       break;
     
     default:
