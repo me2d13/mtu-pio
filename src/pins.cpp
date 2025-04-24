@@ -3,6 +3,7 @@
 #include "Logger.h"
 #include "context.h"
 #include "state.h"
+#include "joy.h"
 
 #define MCP23X17_ADDRESS  0x20
 
@@ -34,9 +35,11 @@
 
 #define MCP23X17_INT_ERR  0xFF
 
+#define INPUT_ADDRESS     0x00
 #define OUTPUT_ADDRESS    0x01
 
 Task inputPinsPollingTask;
+Task readInputPinsTask;
 
 int last12VState = 3;
 
@@ -44,17 +47,49 @@ void pollPins();
 
 void MultiplexedPins::setup()
 {
+    // output multiplexer
     write(MCP23X17_IODIRA, 0x00, OUTPUT_ADDRESS); // set all pins to output
     write(MCP23X17_IODIRB, 0x00, OUTPUT_ADDRESS); // set all pins to output
+    // input multiplexer
+    write(MCP23X17_IODIRA, 0xFF, INPUT_ADDRESS); // set all pins to input
+    write(MCP23X17_IODIRB, 0xFF, INPUT_ADDRESS); // set all pins to input
+    // set all input pins to support interrupt on change (compared with previous value)
+    // 1) enable inpterupts
+    write(MCP23X17_GPINTENA, 0xFF, INPUT_ADDRESS); // set all pins to interrupt on change
+    write(MCP23X17_GPINTENB, 0xFF, INPUT_ADDRESS); // set all pins to interrupt on change
+    // 2) set mode to compare with previous value via INTCONA/B
+    write(MCP23X17_INTCONA, 0x00, INPUT_ADDRESS); // set all pins to compare with previous value
+    write(MCP23X17_INTCONB, 0x00, INPUT_ADDRESS); // set all pins to compare with previous value
+    // 3) set IOCON so INTB indicates any change on GPIOA and GPIOB
+    // IOCON has bits: BANK MIRROR SEQOP DISSLW HAEN ODR INTPOL UNUSED
+    write(MCP23X17_IOCONA, 0b01000000, INPUT_ADDRESS); // set IOCON to default value
+    // 4) set pullups on all input pins
+    write(MCP23X17_GPPUA, 0xFF, INPUT_ADDRESS); // set all pins to pullup
+    write(MCP23X17_GPPUB, 0xFF, INPUT_ADDRESS); // set all pins to pullup
+
     logger.log("MCP23017 pin directions set");
     pinMode(PIN_12V_IN, INPUT_PULLUP); // set 12V detect pin to input with pullup
-
+    // configure interrupt output from MCP23017 as input pin
+    pinMode(PIN_BUTTONS_INTERRUPT, INPUT_PULLUP); 
+    // attach interrupt handler to PIN_BUTTONS_INTERRUPT
+    attachInterrupt(digitalPinToInterrupt(PIN_BUTTONS_INTERRUPT), []() {
+        readInputPinsTask.restartDelayed(50); // 50 for debounce time
+    }, FALLING); // trigger on falling edge as INTB is active low (IOCON.INTPOL = 0)
     //TODO: this should be pulled out of multiplexer class
     inputPinsPollingTask.setInterval(500);
     inputPinsPollingTask.setIterations(TASK_FOREVER);
     inputPinsPollingTask.setCallback(pollPins);
     ctx()->taskScheduler.addTask(inputPinsPollingTask);
     inputPinsPollingTask.enableDelayed(500);
+
+    // task runs every minute, but is forced by interrupts to run immediately
+    readInputPinsTask.setInterval(60*1000);
+    readInputPinsTask.setIterations(TASK_FOREVER);
+    readInputPinsTask.setCallback([]() {
+        ctx()->pins.readInputPins();
+    });
+    ctx()->taskScheduler.addTask(readInputPinsTask);
+    readInputPinsTask.enableDelayed(1000);
 }
 
 void MultiplexedPins::scheduleSetup(TwoWire &wire, unsigned long delay)
@@ -84,8 +119,8 @@ uint8_t MultiplexedPins::read(uint8_t addr, uint8_t i2cAddress) {
 	wire->endTransmission();
 	wire->requestFrom(MCP23X17_ADDRESS | i2cAddress, 1);
     auto value = wire->read();
-    String message = "MCP23017 read value: " + String(value) + " from address: " + String(addr);
-    logger.log(message.c_str());
+    //String message = "MCP23017 read value: " + String(value) + " from address: " + String(addr);
+    //logger.log(message.c_str());
     return value;
 }
 
@@ -94,6 +129,18 @@ void MultiplexedPins::write(uint8_t addr, uint8_t value, uint8_t i2cAddress) {
 	wire->write(addr);
 	wire->write(value);
 	wire->endTransmission();
+}
+
+void MultiplexedPins::readInputPins() {
+    uint8_t valueA = read(MCP23X17_GPIOA, INPUT_ADDRESS);
+    uint8_t valueB = read(MCP23X17_GPIOB, INPUT_ADDRESS);
+    int rawValue = (valueB | (valueA << 8)) ^ 0xFFFF; // invert value as pullups are used
+    ctx()->state.transient.setButtonsRawValue(rawValue);
+    if (ENABLE_JOYSTICK) {
+        readStateDataAndSendJoy();
+    }
+    String message = "MCP23017 read input pins: " + String(valueA, BIN) + " " + String(valueB, BIN);
+    logger.log(message.c_str());
 }
 
 void pollPins() {

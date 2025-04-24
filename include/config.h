@@ -18,6 +18,7 @@
 
 #define PIN_12V_IN 12
 #define PIN_OUT_PARK_LED 0
+#define PIN_BUTTONS_INTERRUPT 10
 
 
 #define PIN_MOTOR_ADDR_0 6
@@ -25,7 +26,7 @@
 #define PIN_MOTOR_ADDR_2 15
 
 #define NUMBER_OF_AXIS 5
-#define NUMBER_OF_BUTTONS 32
+#define NUMBER_OF_BUTTONS 16
 #define X_AXIS 1
 #define Y_AXIS 2
 #define Z_AXIS 0

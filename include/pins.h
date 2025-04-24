@@ -9,6 +9,7 @@ private:
     Task pinsInitTask;
     TwoWire *wire;
     uint16_t outValue = 0xFFFF;
+    void readInputPins();
 public:
     void setup();
     void scheduleSetup(TwoWire &wire, unsigned long delay);

@@ -51,6 +51,7 @@ private:
     bool twelveVPresent = false;
     int i2cChannelSwitchFailures = 0;
     int axisReadFailures[NUMBER_OF_AXIS];
+    int buttonsRawValue;
 public:
     TransientState() {
         for (int i = 0; i < NUMBER_OF_AXIS; i++) {
@@ -67,6 +68,8 @@ public:
     int getI2cChannelSwitchFailures() { return this->i2cChannelSwitchFailures; }
     int incrementAxisReadFailures(int index) { return ++this->axisReadFailures[index]; }
     int getAxisReadFailures(int index) { return this->axisReadFailures[index]; }
+    int getButtonsRawValue() { return this->buttonsRawValue; }
+    void setButtonsRawValue(int value) { this->buttonsRawValue = value; }
     String reportState();
 };
 

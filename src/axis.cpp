@@ -39,7 +39,6 @@ void AxesController::setup() {
 
 void AxesController::readSingleAxis(int index) {
     ctx()->i2c()->channel(axisI2cIndexes[index]);
-    //delay(10); // wait for channel switch to settle
     int value = sensor->rawAngle();
     if (sensor->lastError() == AS5600_OK) {
         ctx()->state.transient.setAxisValue(index, value);

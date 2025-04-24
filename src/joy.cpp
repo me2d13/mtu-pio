@@ -12,12 +12,12 @@ COM9 is present in both scenarios
 */
 
 Joystick_ joystick(JOYSTICK_DEFAULT_REPORT_ID, 
-  JOYSTICK_TYPE_JOYSTICK, 32, 0,
+  JOYSTICK_TYPE_JOYSTICK, NUMBER_OF_BUTTONS, 0,
   true, true, true, true, true, false, // x, y, z, rx, ry, rz
   false, false, false, false, false); 
 
 int lastAxis[NUMBER_OF_AXIS];
-u_char lastButtons[NUMBER_OF_BUTTONS];
+int lastRawButtons = 0;
 bool dirty = false;
 
 void setJoyAxis(int index, int value);
@@ -40,7 +40,6 @@ void setupJoy() {
    logger.log("Joystick started");
    joystick.sendState();
    for (int i = 0; i < NUMBER_OF_AXIS; i++) lastAxis[i] = 0;
-   for (int i = 0; i < NUMBER_OF_BUTTONS; i++) lastButtons[i] = 0;
 }
 
 void readStateDataAndSendJoy() {
@@ -51,9 +50,14 @@ void readStateDataAndSendJoy() {
             setJoyAxis(i, ctx()->state.transient.getCalibratedAxisValue(i, &ctx()->state.persisted.axisSettings[i]));
         }
     }
-    // read button data from the buttons
-    //for (int i = 0; i < NUMBER_OF_BUTTONS; i++) {
-    //    int value = ctx()->state.transient.getButtonValue(i);
+    if (lastRawButtons != ctx()->state.transient.getButtonsRawValue()) {
+        dirty = true;
+        lastRawButtons = ctx()->state.transient.getButtonsRawValue();
+        for (int i = 0; i < NUMBER_OF_BUTTONS; i++) {
+            int value = (lastRawButtons >> i) & 0x01;
+            joystick.setButton(i, value);
+        }
+    }
     sendJoy();
 }
 

@@ -49,6 +49,7 @@ String TransientState::reportState() {
         }
     }
     state += "],";
+    state += "\"buttonsRawValue\":" + String(buttonsRawValue) + ",";
     state += "\"12VPresent\":" + String(twelveVPresent ? "true" : "false") + ",";
     state += "\"i2cChannelSwitchFailures\":" + String(i2cChannelSwitchFailures) + ",";
     state += "\"axisReadFailures\":[";
