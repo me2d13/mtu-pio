@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     connectRangeInput('speed-range', 'speed-number');
     connectRangeInput('angle-range', 'angle-number');
+    connectRangeInput('position-range', 'position-number');
 
     const motorindex = document.querySelectorAll('input[name="motorIndex"]');
     const sendSpeedButton = document.querySelector("#speed-section #send-speed");
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const enableButton = document.querySelector("#enable");
     const disableButton = document.querySelector("#disable");
     const sendStepsButton = document.querySelector("#steps-section button");
+    const sendPositionButton = document.querySelector("#position-section button");
 
     const selectedMotor = () => {
         let motor = 0;
@@ -81,6 +83,12 @@ document.addEventListener('DOMContentLoaded', function() {
             parameters: {
                 angle: Number(document.getElementById('angle-number').value),
                 rpm: Number(document.getElementById('rpm-number').value),
+            }
+        }));
+    sendPositionButton.addEventListener("click", () => sendPostCommand("moveToPosition", "#position-section", 
+        {
+            parameters: {
+                position: Number(document.getElementById('position-number').value),
             }
         }));
     
