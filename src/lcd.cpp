@@ -9,31 +9,81 @@
 #include "i2c.h"
 #include <TaskSchedulerDeclarations.h>
 
-#define fullDEBUG(m) logger.log(m)
-#define serialDEBUG(m) Serial.println(m)
-#define DEBUG(m) // Serial.println(m)
+#define ENABLE_LCD_PROFILING 0
 
-LCD_I2C lcd(0x27, 20, 4);
+#define COLS 20
+#define ROWS 4
+
+LCD_I2C lcd(0x27, COLS, ROWS);
 
 Task lcdTask;
 
 void lcdAbout();
+
+char lcdState[COLS * ROWS + 1] = {0};
+char lcdCanvas[COLS * ROWS + 1] = {0};
+
+// compare canvas with lcd state and update lcd if needed
+// do minimal updates to lcd - only when byte in state is different from canvas
+int printCanvasToLcd() {
+    auto start = millis();
+    int charsUpdated = 0;
+    bool setCursorNeeded = true;
+    for (int row = 0; row < ROWS; row++) {
+        setCursorNeeded = true;
+        for (int col = 0; col < COLS; col++) {
+            int i = row * COLS + col;
+            if (lcdState[i] != lcdCanvas[i]) {
+                if (setCursorNeeded) {
+                    lcd.setCursor(col, row);
+                    // if we update more than 1 char, we don't need to set cursor again
+                    setCursorNeeded = false;
+                }
+                lcd.write(lcdCanvas[i]);
+                lcdState[i] = lcdCanvas[i];
+                charsUpdated++;
+            } else {
+                // we skipped char, need to set cursor again
+                setCursorNeeded = true;
+            }
+        }
+    }
+    if (ENABLE_LCD_PROFILING) {
+        auto end = millis();
+        char message[100];
+        sprintf(message, "lcd update took %d ms, chars updated: %d", end - start, charsUpdated);
+        logger.log(message);
+        // full screen: lcd update took 91 ms, chars updated: 80
+        // seconds update: lcd update took 4 ms, chars updated: 2
+        // axis value update: lcd update took 11 ms, chars updated: 7
+    }
+    return charsUpdated;
+}
+
+void printTestPage(char *canvas) {
+    strcpy(canvas, 
+           "line1:78901234567890"
+           "line2: hijklmnopqrst"
+           "line3:--------------"
+           "line4: hijklmnopqrst"
+    );
+}
+
+void lcdTest() {
+    printTestPage(lcdCanvas);
+    printCanvasToLcd();
+}
+
 
 void setupLcd() {
     if (ENABLE_LCD == 0) {
         logger.log("Lcs setup skipped, ENABLE_LCD is 0");
         return;
     }
-    DEBUG("Setting up LCD, selecting channel");
     ctx()->i2c()->channel(I2C_CHANNEL_LCD);
-    DEBUG("Channel seleced, initializing LCD");
-    //delay(100);
     lcd.begin(ctx()->i2c()->peripherals());
-    DEBUG("LCD initialized");
     lcd.display();
-    DEBUG("LCD displayed");
     lcd.backlight();
-    DEBUG("LCD backlight on");
     //lcd.backlightOff();
 
     lcdTask.setInterval(1000);
@@ -47,40 +97,49 @@ void setupLcd() {
     ctx()->taskScheduler.addTask(lcdTask);
     lcdTask.enable();
     lcd.clear();
-    DEBUG("LCD clear done");
     lcdAbout();
-    DEBUG("LCD about printed");
+    //lcdTest();
+}
+
+void printToCanvas(int col, int row, const char *text) {
+    // print text to canvs buffer without null terminator
+    // if text is too long, truncate it to fit in the buffer
+    int len = strlen(text);
+    if (len > COLS - col) {
+        len = COLS - col;
+    }
+    for (int i = 0; i < len; i++) {
+        lcdCanvas[row * COLS + col + i] = text[i];
+    }
+}
+
+void printToCanvasRpad(int col, int row, int value, int width) {
+    // print value to canvas buffer with right padding
+    // if value is too long, truncate it to fit in the buffer
+    char text[10];
+    sprintf(text, "%d", value);
+    int len = strlen(text);
+    if (len > width) {
+        len = width;
+    }
+    for (int i = 0; i < len; i++) {
+        lcdCanvas[row * COLS + col + i] = text[i];
+    }
+    for (int i = len; i < width; i++) {
+        lcdCanvas[row * COLS + col + i] = ' ';
+    }
 }
 
 void lcdAbout() {
-    //Serial.print("CPU frequency: ");
-    //Serial.println(esp_clk_cpu_freq());
-    lcd.setCursor(0, 0);
-    DEBUG("Set cursor done");
-    lcd.print("IP: ");
-    DEBUG("Print IP static text done");
-    lcd.print(getIp().c_str());
-    DEBUG("Printing IP done");
-    lcd.setCursor(7, 1); // Or setting the cursor in the desired position.
-    lcd.print("M T U");
-    if (1==0) {
-        int cpu_freq = esp_clk_cpu_freq();
-        int apb_freq = esp_clk_apb_freq();
-        lcd.setCursor(0, 2);
-        lcd.print(cpu_freq);
-        lcd.print(" / ");
-        lcd.print(apb_freq);
-    }
-    lcd.setCursor(0, 2);
-    lcd.print("X:");
-    lcd.print(ctx()->state.transient.getAxisValue(0));
-    lcd.print("    ");
-    lcd.setCursor(0, 3);
-    lcd.print(getTimeStr().c_str());
+    memccpy(lcdCanvas, 
+        "IP :                "
+        "      M  T  U       "
+        "T1: ????   T2: ???? "
+        "                    "
+        , 0, COLS * ROWS);
+    printToCanvas(4, 0, getIp().c_str());
+    printToCanvasRpad(4, 2, ctx()->state.transient.getAxisValue(1), 4);
+    printToCanvasRpad(15, 2, ctx()->state.transient.getAxisValue(2), 4);
+    printToCanvas(0, 3, getTimeStr().c_str());
+    printCanvasToLcd();
 }
-
-void displaySlowClockCalibration() { uint32_t slow_clk_cal = esp_clk_slowclk_cal_get(); Serial.print("Slow Clock Calibration Value: "); Serial.print(slow_clk_cal); Serial.println(" microseconds"); }
-
-void displayCpuFrequency() { int cpu_freq = esp_clk_cpu_freq(); Serial.print("CPU Frequency: "); Serial.print(cpu_freq); Serial.println(" Hz"); }
-
-void displayApbFrequency() { int apb_freq = esp_clk_apb_freq(); Serial.print("APB Frequency: "); Serial.print(apb_freq); Serial.println(" Hz"); }
