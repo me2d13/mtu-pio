@@ -13,6 +13,7 @@
 #include "motor.h"
 #include "api.h"
 #include "pins.h"
+#include "udp.h"
 
 #ifdef ENABLE_HTTP_SERVER
 #include <ESPAsyncWebServer.h>
@@ -52,6 +53,9 @@ void GlobalContext::setup()
     }
     if (ENABLE_JOYSTICK) {
         setupJoy();
+    }
+    if (ENABLE_UDP) {
+        xplaneInterface.setup();
     }
     motorsController.scheduleSetup(300); // must be after pins setup
 }

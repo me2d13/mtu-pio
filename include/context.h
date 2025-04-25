@@ -10,6 +10,7 @@
 #include "motors.h"
 #include "axis.h"
 #include "state.h"
+#include "udp.h"
 
 class GlobalContext {
 public:
@@ -23,6 +24,7 @@ public:
   MotorsController motorsController;
   AxesController axesController;
   State state;
+  XplaneInterface xplaneInterface;
   void debugCall(int index);
 private:
   AsyncWebServer* server;
