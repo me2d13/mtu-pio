@@ -2,7 +2,7 @@
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "SPIFFS.h"
+#include <SPIFFS.h>
 #include "Logger.h"
 #include "web.h"
 #include <string>
@@ -54,13 +54,18 @@ struct Page {
     std::string name;
     std::string title;
     std::string link;
+    bool hasJavascipt;
+
+    Page(const std::string& name, const std::string& title, const std::string& link, bool hasJavascipt)
+        : name(name), title(title), link(link), hasJavascipt(hasJavascipt) {}
 };
 
 // Define the pages
 std::vector<Page> pages = {
-    {"log", "Logs", "/log"},
-    {"motor", "Motor Control", "/motor"},
-    {"about", "About", "/about"}
+    Page("log", "Logs", "/log", false),
+    Page("motor", "Motor Control", "/motor", true),
+    Page("config", "Configuration", "/config", true),
+    Page("about", "About", "/about", false)
 };
 
 // Function to notify clients of a new log message
@@ -130,26 +135,21 @@ void handleLogRequest(AsyncWebServerRequest* request) {
     servePage(request, "Logs", body, "log");
 }
 
-void handleMotorRequest(AsyncWebServerRequest* request) {
-    File file = SPIFFS.open("/www/motor.html", "r");
+void handlePageRequest(AsyncWebServerRequest* request, const Page* page) {
+    if (page == nullptr) {
+        request->send(404, "text/plain", "Page not found");
+        return;
+    }
+    std::string htmlPage = "/www/" + page->name + ".html";
+    File file = SPIFFS.open(htmlPage.c_str(), "r");
     if (!file.available()) {
-        request->send(500, "text/plain", "Failed to open motor.html");
+        request->send(500, "text/plain", "Failed to open page file");
         return;
     }
     String body = file.readString();
     file.close();
-    servePage(request, "Motor Control", std::string(body.c_str()), "motor", "motor.js");
-}
-
-void handleAboutRequest(AsyncWebServerRequest* request) {
-    File file = SPIFFS.open("/www/about.html", "r");
-    if (!file.available()) {
-        request->send(500, "text/plain", "Failed to open about.html");
-        return;
-    }
-    String body = file.readString();
-    file.close();
-    servePage(request, "About", std::string(body.c_str()), "about");
+    std::string jsPage = page->hasJavascipt ? page->name + ".js" : "";
+    servePage(request, page->title, std::string(body.c_str()), page->name, jsPage);
 }
 
 AsyncWebServer* setupWeb() {
@@ -166,11 +166,14 @@ AsyncWebServer* setupWeb() {
     // Serve the log page
     server.on("/log", HTTP_GET, handleLogRequest);
 
-    // Serve the motor page
-    server.on("/motor", HTTP_GET, handleMotorRequest);
-
-    // Serve the about page
-    server.on("/about", HTTP_GET, handleAboutRequest);
+    // serve all other pages
+    for (const auto& page : pages) {
+        if (page.name != "log") {
+            server.on(page.link.c_str(), HTTP_GET, [page](AsyncWebServerRequest* request) {
+            handlePageRequest(request, &page);
+            });
+        }
+    }
 
     server.onNotFound(notFound);
 

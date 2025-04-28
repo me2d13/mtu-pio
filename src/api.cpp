@@ -71,4 +71,19 @@ ApiController::ApiController(GlobalContext *context) : server(context->getServer
         request->send(200, "application/json", state);
         logger.log("Logging state done");
       });
+
+      AsyncCallbackJsonWebHandler *configHandler = new AsyncCallbackJsonWebHandler("/api/state", 
+        [](AsyncWebServerRequest *request, JsonVariant &json) {
+          JsonObject jsonObj = json.as<JsonObject>();
+          bool factoryReset = jsonObj["factoryReset"].as<bool>();
+          if (factoryReset) {
+            ctx()->state.persisted.factoryReset();
+            request->send(200, "text/plain", "Factory reset done");
+            return;
+          }
+          String result = ctx()->state.persisted.loadFromJsonObject(jsonObj, true);
+          request->send(200, "text/plain", result);
+        });
+        configHandler->setMethod(HTTP_POST);
+        server->addHandler(configHandler);
 }

@@ -32,13 +32,7 @@ void GlobalContext::setup()
 
     i2cController = new I2cController();
     i2cController->setup();
-    //pins.setup(*(i2cController->peripherals()));
     pins.scheduleSetup(*(i2cController->peripherals()), 100);
-
-    setupLcd();
-    axesController.setup();
-    logger.log("Axis initialized");
-    lcdAbout();
 
     // Initialize SPIFFS
     if (!SPIFFS.begin(true))
@@ -46,6 +40,12 @@ void GlobalContext::setup()
         Serial.println("An Error has occurred while mounting SPIFFS");
         logger.log("An Error has occurred while mounting SPIFFS");
     }
+    state.persisted.loadFromFlash();
+    
+    setupLcd();
+    axesController.setup();
+    logger.log("Axis initialized");
+    lcdAbout();
 
     if (ENABLE_HTTP_SERVER) {
         server = setupWeb();

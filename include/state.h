@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "config.h"
+#include <ArduinoJson.h>
 
 struct axis_settings
 {
@@ -25,23 +26,19 @@ struct motor_settings
 class PersistedState
 {
 private:
+    void fillJsonDocument(JsonDocument &doc);
+    String loadFromJsonDocument(JsonDocument &doc);
 public:
-    axis_settings axisSettings[NUMBER_OF_AXIS] = {
-        {0, 4096, "SB", false},
-        {0, 4096, "THR1", false},
-        {2505, 846, "THR2", false},
-        {0, 4096, "FLAPS", false},
-        {0, 4096, "TRIM", false}
-    };
-    motor_settings motorSettings[MOTORS_COUNT] = {
-        {400, 4, "THR1"},
-        {200, 4, "THR2"},
-        {100, 4, "SB"},
-        {100, 1, "TRIM"},
-        {100, 1, "TRI1"},
-        {100, 1, "TRI2"}
-    };
-String reportState();
+    PersistedState();
+    axis_settings axisSettings[NUMBER_OF_AXIS];
+    motor_settings motorSettings[MOTORS_COUNT];
+    String reportState();
+    String loadFromJson(String json);
+    String loadFromJsonObject(JsonObject &jsonObject, boolean saveOnSuccess);
+    void factoryReset(); // same as resetToDefaultValues but with more logging
+    void resetToDefaultValues();
+    void saveToFlash();
+    void loadFromFlash();
 };
 
 class TransientState
