@@ -24,13 +24,16 @@ void MotorsController::setup() {
     pinMode(PIN_MOTOR_ADDR_1, OUTPUT);
     pinMode(PIN_MOTOR_ADDR_2, OUTPUT);
     logger.log("Motors UART addr bits configured");
-    //for (int i = 0; i < MOTORS_COUNT; i++) {
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < MOTORS_COUNT; i++) {
+    //for (int i = 0; i < 2; i++) {
         TMC2208Stepper *driver = new TMC2208Stepper(&motorSerial, R_SENSE);
         motors[i].init(driver);
     }
     // add sensors to motors for THR1 and THR2
-    motors[MOTOR_THR1].addSensor(2, false);
+    motors[MOTOR_THR1].addSensor(1, true);
+    motors[MOTOR_THR2].addSensor(2, false);
+    motors[MOTOR_SPEED_BRAKE].addSensor(0, false);
+    logger.log("Motors setup done");
 }
 
 void MotorsController::selectMotorUart(uint8_t addr) {

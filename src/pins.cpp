@@ -50,6 +50,9 @@ void MultiplexedPins::setup()
     // output multiplexer
     write(MCP23X17_IODIRA, 0x00, OUTPUT_ADDRESS); // set all pins to output
     write(MCP23X17_IODIRB, 0x00, OUTPUT_ADDRESS); // set all pins to output
+    // initialize output pins with outValue
+    write(MCP23X17_OLATA, outValue, OUTPUT_ADDRESS); // set all pins to output
+    write(MCP23X17_OLATB, outValue >> 8, OUTPUT_ADDRESS); // set all pins to output
     // input multiplexer
     write(MCP23X17_IODIRA, 0xFF, INPUT_ADDRESS); // set all pins to input
     write(MCP23X17_IODIRB, 0xFF, INPUT_ADDRESS); // set all pins to input

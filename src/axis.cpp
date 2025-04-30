@@ -103,11 +103,11 @@ long calculateCalibratedValue(int value, axis_settings *settings) {
             // range is below 4096 part plus above 0 part
             int range = (4096 - settings->maxValue) + settings->minValue;
             // now the value is in the range of 0 to range, we can use mapping
-            return map(value, 0, range, 0, AXIS_MAX_CALIBRATED_VALUE);
+            return map(value, 0, range, AXIS_MAX_CALIBRATED_VALUE, 0);
         } else {
             value = constrain(value, settings->maxValue, settings->minValue);
             // the axis is reversed and the value is in the range of minValue and maxValue
-            return map(value, settings->maxValue, settings->minValue, 0, AXIS_MAX_CALIBRATED_VALUE);
+            return map(value, settings->maxValue, settings->minValue, AXIS_MAX_CALIBRATED_VALUE, 0);
         }
     }    
 }

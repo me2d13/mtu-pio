@@ -7,15 +7,15 @@
 #include <SPIFFS.h>
 
 axis_settings defaultAxisSettings[NUMBER_OF_AXIS] = {
-    {0, 4096, "SB", false},
-    {0, 4096, "THR1", false},
-    {2505, 846, "THR2", false},
+    {274, 93, "SB", false},
+    {3443, 1043, "THR1", true},
+    {3945, 2265, "THR2", false},
     {0, 4096, "FLAPS", false},
     {0, 4096, "TRIM", false}
 };
 motor_settings defaultMotorSettings[MOTORS_COUNT] = {
     {400, 4, "THR1"},
-    {200, 4, "THR2"},
+    {400, 4, "THR2"},
     {100, 4, "SB"},
     {100, 1, "TRIM"},
     {100, 1, "TRI1"},
@@ -94,18 +94,18 @@ String PersistedState::reportState() {
 }
 
 void PersistedState::fillJsonDocument(JsonDocument &doc) {
-    JsonArray axisSettingsArray = doc.createNestedArray("axisSettings");
+    JsonArray axisSettingsArray = doc["axisSettings"].to<JsonArray>();
     for (int i = 0; i < NUMBER_OF_AXIS; i++) {
-        JsonObject axisSetting = axisSettingsArray.createNestedObject();
+        JsonObject axisSetting = axisSettingsArray.add<JsonObject>();
         axisSetting["name"] = axisSettings[i].name;
         axisSetting["minValue"] = axisSettings[i].minValue;
         axisSetting["maxValue"] = axisSettings[i].maxValue;
         axisSetting["isReversed"] = axisSettings[i].isReversed;
     }
 
-    JsonArray motorSettingsArray = doc.createNestedArray("motorSettings");
+    JsonArray motorSettingsArray = doc["motorSettings"].to<JsonArray>();
     for (int i = 0; i < MOTORS_COUNT; i++) {
-        JsonObject motorSetting = motorSettingsArray.createNestedObject();
+        JsonObject motorSetting = motorSettingsArray.add<JsonObject>();
         motorSetting["name"] = motorSettings[i].name;
         motorSetting["runCurrent"] = motorSettings[i].runCurrent;
         motorSetting["microSteps"] = motorSettings[i].microSteps;

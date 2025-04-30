@@ -29,6 +29,7 @@ void Motor::init(TMC2208Stepper *driver) {
     ctx()->motorsController.selectMotorUart(index);
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
+    logger.log(("Motor " + String(index) + " initialized with step pin: " + String(stepPin) + ", dir pin: " + String(dirPin)).c_str());
 
     driver->begin();
     driver->toff(5);                 // Enables driver in software

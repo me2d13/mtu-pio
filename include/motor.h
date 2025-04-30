@@ -29,7 +29,7 @@ public:
     Motor(int motorIndex, int step, int dir);
     void addSensor(int axisIndex, bool motorSensorReversed) {
         this->axisIndex = axisIndex;
-        this->sensorReversed = sensorReversed;
+        this->sensorReversed = motorSensorReversed;
     }
 
     // Getters

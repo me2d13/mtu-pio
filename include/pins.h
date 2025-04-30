@@ -8,7 +8,7 @@ class MultiplexedPins
 private:
     Task pinsInitTask;
     TwoWire *wire;
-    uint16_t outValue = 0xFFFF;
+    uint16_t outValue = 0xBFFF; // ParkLed B6 is off
     void readInputPins();
 public:
     void setup();
