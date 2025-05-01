@@ -49,6 +49,8 @@ private:
     int i2cChannelSwitchFailures = 0;
     int axisReadFailures[NUMBER_OF_AXIS];
     int buttonsRawValue;
+    long roataryEncoderValue = 0;
+    int rotaryButtonPressedTime = 0;
 public:
     TransientState() {
         for (int i = 0; i < NUMBER_OF_AXIS; i++) {
@@ -67,6 +69,10 @@ public:
     int getAxisReadFailures(int index) { return this->axisReadFailures[index]; }
     int getButtonsRawValue() { return this->buttonsRawValue; }
     void setButtonsRawValue(int value) { this->buttonsRawValue = value; }
+    long getRotaryEncoderValue() { return this->roataryEncoderValue; }
+    void setRotaryEncoderValue(long value) { this->roataryEncoderValue = value; }
+    int getRotaryButtonPressedTime() { return this->rotaryButtonPressedTime; }
+    void setRotaryButtonPressedTime(int value) { this->rotaryButtonPressedTime = value; }
     String reportState();
 };
 

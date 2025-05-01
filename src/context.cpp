@@ -14,6 +14,7 @@
 #include "api.h"
 #include "pins.h"
 #include "udp.h"
+#include "rotary.h"
 
 #ifdef ENABLE_HTTP_SERVER
 #include <ESPAsyncWebServer.h>
@@ -22,6 +23,8 @@
 GlobalContext instance;
 
 GlobalContext::GlobalContext() {};
+
+EncoderInput rotaryEncoder; // doesn't have to be in .h file as it would introduce multiple implementation errors of attachInterrupt
 
 void GlobalContext::setup()
 {
@@ -57,6 +60,7 @@ void GlobalContext::setup()
     if (ENABLE_UDP) {
         xplaneInterface.setup();
     }
+    rotaryEncoder.setup();
     motorsController.scheduleSetup(300); // must be after pins setup
 }
 
