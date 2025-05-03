@@ -10,8 +10,9 @@
 int calculateMoveSpeed(long currentPosition, long targetPosition);
 
 // Constructor implementation
-Motor::Motor(int motorIndex, int step, int dir) 
+Motor::Motor(int motorIndex, int uartChannel, int step, int dir) 
     : index(motorIndex), 
+      uartChannel(uartChannel),
       stepPin(step), 
       dirPin(dir) {
         // Initialize the stepping task
@@ -24,13 +25,18 @@ Motor::Motor(int motorIndex, int step, int dir)
 int Motor::getIndex() const { return index; }
 
 void Motor::init(TMC2208Stepper *driver) {
-    disable();
     this->driver = driver;
-    ctx()->motorsController.selectMotorUart(index);
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
-    logger.log(("Motor " + String(index) + " initialized with step pin: " + String(stepPin) + ", dir pin: " + String(dirPin)).c_str());
+    char message[70];
+    snprintf(message, sizeof(message), "Motor %d initialized with step pin: %d, dir pin: %d, uart addr %d", index, stepPin, dirPin, uartChannel);
+    logger.log(message);
+    reInitDriver();
+}
 
+void Motor::reInitDriver() {
+    disable();
+    ctx()->motorsController.selectMotorUart(uartChannel);
     driver->begin();
     driver->toff(5);                 // Enables driver in software
     driver->rms_current(settings->runCurrent); // Set motor RMS current
@@ -40,10 +46,14 @@ void Motor::init(TMC2208Stepper *driver) {
 
     uint8_t  version    = driver->version();
     uint16_t microsteps = driver->microsteps();
-    std::stringstream ss;
-    ss << "Motor " << index << " performing init - Driver version: " << static_cast<int>(version) 
-        << ", Microsteps: " << microsteps;
-    logger.log(ss.str());
+    if (version) {
+        std::stringstream ss;
+        ss << "Motor " << index << " performing init - Driver version: " << static_cast<int>(version) 
+            << ", Microsteps: " << microsteps;
+        logger.log(ss.str());
+    } else {
+        logger.log("WARN Motor " + std::to_string(index) + " driver communication problem, no response received.");
+    }
     driver->VACTUAL(0);
 }
 
@@ -84,6 +94,7 @@ void Motor::moveCallback() {
         std::stringstream ss;
         ss << "Motor " << index << " reached target position " << static_cast<int>(targetPosition);
         logger.log(ss.str());
+        ctx()->motorsController.selectMotorUart(uartChannel);
         driver->VACTUAL(0);
         movingSpeed = 0;
         movingTask->disable();
@@ -101,7 +112,7 @@ void Motor::moveCallback() {
 }
 
 void Motor::turnBySpeed(int speed) {
-    ctx()->motorsController.selectMotorUart(index);
+    ctx()->motorsController.selectMotorUart(uartChannel);
     std::stringstream ss;
     ss << "Motor " << index << " running at speed " << static_cast<int>(speed);
     logger.log(ss.str());
@@ -140,14 +151,14 @@ void Motor::enable() {
     // GPB0 is index 8
     logger.print("Enabling motor ");
     logger.println(index);
-    ctx()->pins.setPin(index + 8, LOW);
+    ctx()->pins.setPin(uartChannel + 8, LOW);
     // W21-15, R21-00, W21-13-00
 }
 
 void Motor::disable() {
     logger.print("Disabling motor ");
     logger.println(index);
-    ctx()->pins.setPin(index + 8, HIGH);
+    ctx()->pins.setPin(uartChannel + 8, HIGH);
 }
 
 int calculateMoveSpeed(long currentPosition, long targetPosition) {

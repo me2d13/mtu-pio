@@ -11,8 +11,8 @@ class MotorsController
 private:
     Task motorsInitTask;
     Motor motors[MOTORS_COUNT] = {
-        Motor(MOTOR_THR1, 42, 41),
-        Motor(MOTOR_THR2, 40, 39),
+        Motor(0, MOTOR_THR1, 48, 47),
+        Motor(1, MOTOR_THR2, 48, 47),
 /*      
 By wrong HW design pins 35-37 are reserved for PSRAM, so using them as DIR/STEP is not possible
 When setting their mode to OUTPUT, the ESP32 will crash.
@@ -30,13 +30,14 @@ Also 20 is out, source: https://github.com/atomic14/esp32-s3-pinouts
 
         Motor(MOTOR_SPEED_BRAKE, 38, 37),
         Motor(MOTOR_TRIM, 36, 35),*/
-        Motor(MOTOR_SPEED_BRAKE, 40, 39),
-        Motor(MOTOR_TRIM, 40, 39),
-        Motor(MOTOR_TRIM_IND_1, 48, 47),
-        Motor(MOTOR_TRIM_IND_2, 21, 39) //20)
+        Motor(2, MOTOR_SPEED_BRAKE, 40, 39),
+        Motor(3, MOTOR_TRIM, 40, 39),
+        Motor(4, MOTOR_TRIM_IND_1, 42, 41),
+        Motor(5, MOTOR_TRIM_IND_2, 40, 39)
     };
 public:
     void setup();
+    void reInit();
     void scheduleSetup(unsigned long delay);
     void selectMotorUart(uint8_t addr);
     Motor *getMotor(int index);

@@ -158,6 +158,8 @@ void pollPins() {
                 // in this case re-initalize LCD
                 ctx()->screenController.hwSetup();
                 ctx()->screenController.render();
+                // and also re-initialize motors
+                ctx()->motorsController.reInit();
             }
         } else {
             logger.log("12V power lost");

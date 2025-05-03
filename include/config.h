@@ -34,12 +34,12 @@
 #define RY_AXIS 4
 
 #define MOTORS_COUNT 6
-#define MOTOR_THR1 0
-#define MOTOR_THR2 1
+#define MOTOR_THR1 4
+#define MOTOR_THR2 5
 #define MOTOR_SPEED_BRAKE 2
 #define MOTOR_TRIM 3
-#define MOTOR_TRIM_IND_1 4
-#define MOTOR_TRIM_IND_2 5
+#define MOTOR_TRIM_IND_1 0
+#define MOTOR_TRIM_IND_2 1
 
 
 #define I2C_CHANNEL_LCD 5

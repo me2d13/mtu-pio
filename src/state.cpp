@@ -16,10 +16,10 @@ axis_settings defaultAxisSettings[NUMBER_OF_AXIS] = {
 motor_settings defaultMotorSettings[MOTORS_COUNT] = {
     {400, 4, "THR1"},
     {400, 4, "THR2"},
-    {100, 4, "SB"},
-    {100, 1, "TRIM"},
-    {100, 1, "TRI1"},
-    {100, 1, "TRI2"}
+    {400, 4, "SB"},
+    {400, 0, "TRIM"},
+    {400, 16, "TRI1"},
+    {400, 16, "TRI2"}
 };
 
 PersistedState::PersistedState() {

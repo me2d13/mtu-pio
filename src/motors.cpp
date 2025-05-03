@@ -30,17 +30,24 @@ void MotorsController::setup() {
         motors[i].init(driver);
     }
     // add sensors to motors for THR1 and THR2
-    motors[MOTOR_THR1].addSensor(1, true);
-    motors[MOTOR_THR2].addSensor(2, false);
+    motors[0].addSensor(1, true);
+    motors[1].addSensor(2, false);
     motors[MOTOR_SPEED_BRAKE].addSensor(0, false);
     logger.log("Motors setup done");
+}
+
+void MotorsController::reInit() {
+    for (int i = 0; i < MOTORS_COUNT; i++) {
+        motors[i].reInitDriver();
+    }
+    logger.log("Motors re-initialized");
 }
 
 void MotorsController::selectMotorUart(uint8_t addr) {
     digitalWrite(PIN_MOTOR_ADDR_0, addr & 0x01);
     digitalWrite(PIN_MOTOR_ADDR_1, addr & 0x02);
     digitalWrite(PIN_MOTOR_ADDR_2, addr & 0x04);
-    logger.print("Selecting UART for motor ");
+    logger.print("Selecting UART addr ");
     logger.println(addr);
 }
 
