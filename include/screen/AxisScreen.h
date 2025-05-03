@@ -33,23 +33,27 @@ public:
         memccpy(canvas, 
             "T1: ----- T2: ----- "
             "SB: ----- FL: ----- "
-            "TR: -----           "
-            " raw     calibrated "
+            "R1: ----- R2: ----- "
+            "TR: ----- calibrated"
             , 0, COLS * ROWS);
         int t1 = rawValues ? ctx()->state.transient.getAxisValue(1) : ctx()->state.transient.getCalibratedAxisValue(1, &ctx()->state.persisted.axisSettings[1]);
         int t2 = rawValues ? ctx()->state.transient.getAxisValue(2) : ctx()->state.transient.getCalibratedAxisValue(2, &ctx()->state.persisted.axisSettings[2]);
         int sb = rawValues ? ctx()->state.transient.getAxisValue(0) : ctx()->state.transient.getCalibratedAxisValue(0, &ctx()->state.persisted.axisSettings[0]);
         int fl = rawValues ? ctx()->state.transient.getAxisValue(3) : ctx()->state.transient.getCalibratedAxisValue(3, &ctx()->state.persisted.axisSettings[3]);
         int tr = rawValues ? ctx()->state.transient.getAxisValue(4) : ctx()->state.transient.getCalibratedAxisValue(4, &ctx()->state.persisted.axisSettings[4]);
+        int r1 = rawValues ? ctx()->state.transient.getAxisValue(5) : ctx()->state.transient.getCalibratedAxisValue(5, &ctx()->state.persisted.axisSettings[5]);
+        int r2 = rawValues ? ctx()->state.transient.getAxisValue(6) : ctx()->state.transient.getCalibratedAxisValue(6, &ctx()->state.persisted.axisSettings[6]);
         printToCanvasRpad(4, 0, t1, 5);
         printToCanvasRpad(14, 0, t2, 5);
         printToCanvasRpad(4, 1, sb, 5);
         printToCanvasRpad(14, 1, fl, 5);
-        printToCanvasRpad(4, 2, tr, 5);
+        printToCanvasRpad(4, 2, r1, 5);
+        printToCanvasRpad(14, 2, r2, 5);
+        printToCanvasRpad(4, 3, tr, 5);
         if (rawValues) {
-            printToCanvas(0, 3, ">raw<");
+            printToCanvas(10, 3, "raw       ");
         } else {
-            printToCanvas(8, 3, ">calibrated<");
+            printToCanvas(10, 3, "calibrated");
         }
     }
 };

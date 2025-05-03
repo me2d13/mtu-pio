@@ -11,7 +11,9 @@ axis_settings defaultAxisSettings[NUMBER_OF_AXIS] = {
     {3443, 1043, "THR1", true},
     {3945, 2265, "THR2", false},
     {2199, 3881, "FLAPS", false},
-    {0, 4096, "TRIM", false}
+    {0, 4096, "TRIM", false},
+    {0, 4096, "REV1", false},
+    {0, 4096, "REV2", false}
 };
 motor_settings defaultMotorSettings[MOTORS_COUNT] = {
     {400, 4, "THR1"},

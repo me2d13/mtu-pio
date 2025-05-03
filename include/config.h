@@ -25,7 +25,11 @@
 #define PIN_MOTOR_ADDR_1 7
 #define PIN_MOTOR_ADDR_2 15
 
-#define NUMBER_OF_AXIS 5
+#define PIN_REVERSE_1 13
+#define PIN_REVERSE_2 14
+
+#define NUMBER_OF_DIGITAL_AXIS 5
+#define NUMBER_OF_AXIS 7
 #define NUMBER_OF_BUTTONS 16
 #define X_AXIS 1
 #define Y_AXIS 2

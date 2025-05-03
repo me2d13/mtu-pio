@@ -31,6 +31,9 @@ void AxesController::setup() {
             readStateDataAndSendJoy();
         }
     });
+    // setup reverse pins as analog inputs
+    pinMode(PIN_REVERSE_1, INPUT);
+    pinMode(PIN_REVERSE_2, INPUT);
     ctx()->taskScheduler.addTask(axesCheckTask);
     axesCheckTask.enableDelayed(1000); // 1 second delay for setup
     logger.log("Axis reading task scheduled");
@@ -51,9 +54,11 @@ void AxesController::readSingleAxis(int index) {
 void AxesController::readAxisData() {
     uint32_t currentTime = millis();
     // iterate over all axis
-    for (int i = 0; i < NUMBER_OF_AXIS; i++) {
+    for (int i = 0; i < NUMBER_OF_DIGITAL_AXIS; i++) {
         readSingleAxis(i);
     }
+    ctx()->state.transient.setAxisValue(NUMBER_OF_AXIS - 2, analogRead(PIN_REVERSE_1));
+    ctx()->state.transient.setAxisValue(NUMBER_OF_AXIS - 1, analogRead(PIN_REVERSE_2));
     measuredSamples++;
     measureTimeSpent += millis() - currentTime;
     if (currentTime - measureIntervalStart >= 10000) { // 10 seconds interval
