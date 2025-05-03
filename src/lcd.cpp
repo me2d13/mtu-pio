@@ -8,15 +8,14 @@
 #include "config.h"
 #include "i2c.h"
 #include <TaskSchedulerDeclarations.h>
+#include "Screen.h"
+#include "screen/MenuScreen.h"
 
 #define ENABLE_LCD_PROFILING 0
 
-#define COLS 20
-#define ROWS 4
-
 LCD_I2C lcd(0x27, COLS, ROWS);
 
-Task lcdTask;
+Task lcdRefreshTask;
 
 void lcdAbout();
 
@@ -75,7 +74,19 @@ void lcdTest() {
 }
 
 
-void setupLcd() {
+void ScreenController::setup() {
+    hwSetup();
+    lcdRefreshTask.setIterations(TASK_FOREVER);
+    lcdRefreshTask.setCallback([&]() {
+        if (!ctx()->i2c()->isScanning(PERIPHERALS)) {
+            render();
+        }
+    });
+    ctx()->taskScheduler.addTask(lcdRefreshTask);
+    pushScreen(new MenuScreen(0));
+}
+
+void ScreenController::hwSetup() {
     if (ENABLE_LCD == 0) {
         logger.log("Lcs setup skipped, ENABLE_LCD is 0");
         return;
@@ -85,23 +96,12 @@ void setupLcd() {
     lcd.display();
     lcd.backlight();
     //lcd.backlightOff();
-
-    lcdTask.setInterval(1000);
-    lcdTask.setIterations(TASK_FOREVER);
-    lcdTask.setCallback([]() {
-        if (!ctx()->i2c()->isScanning(PERIPHERALS)) {
-            ctx()->i2c()->channel(I2C_CHANNEL_LCD);
-            lcdAbout();
-        }
-    });
-    ctx()->taskScheduler.addTask(lcdTask);
-    lcdTask.enable();
     lcd.clear();
-    lcdAbout();
-    //lcdTest();
+    // reset lcd state
+    memset(lcdState, 0, COLS * ROWS + 1);
 }
 
-void printToCanvas(int col, int row, const char *text) {
+void Screen::printToCanvas(int col, int row, const char *text) {
     // print text to canvs buffer without null terminator
     // if text is too long, truncate it to fit in the buffer
     int len = strlen(text);
@@ -109,11 +109,11 @@ void printToCanvas(int col, int row, const char *text) {
         len = COLS - col;
     }
     for (int i = 0; i < len; i++) {
-        lcdCanvas[row * COLS + col + i] = text[i];
+        canvas[row * COLS + col + i] = text[i];
     }
 }
 
-void printToCanvasRpad(int col, int row, int value, int width) {
+void Screen::printToCanvasRpad(int col, int row, int value, int width) {
     // print value to canvas buffer with right padding
     // if value is too long, truncate it to fit in the buffer
     char text[10];
@@ -123,23 +123,57 @@ void printToCanvasRpad(int col, int row, int value, int width) {
         len = width;
     }
     for (int i = 0; i < len; i++) {
-        lcdCanvas[row * COLS + col + i] = text[i];
+        canvas[row * COLS + col + i] = text[i];
     }
     for (int i = len; i < width; i++) {
-        lcdCanvas[row * COLS + col + i] = ' ';
+        canvas[row * COLS + col + i] = ' ';
     }
 }
 
-void lcdAbout() {
-    memccpy(lcdCanvas, 
-        "IP :                "
-        "      M  T  U       "
-        "T1: ????   T2: ???? "
-        "                    "
-        , 0, COLS * ROWS);
-    printToCanvas(4, 0, getIp().c_str());
-    printToCanvasRpad(4, 2, ctx()->state.transient.getAxisValue(1), 4);
-    printToCanvasRpad(15, 2, ctx()->state.transient.getAxisValue(2), 4);
-    printToCanvas(0, 3, getTimeStr().c_str());
+void ScreenController::render() {
+    if (screensCount == 0) {
+        return;
+    }
+    screenStack[screensCount - 1]->render();
+    ctx()->i2c()->channel(I2C_CHANNEL_LCD);
     printCanvasToLcd();
+}   
+
+void ScreenController::pushScreen(Screen *screen) {
+    if (screensCount < 10) {
+        screen->init(this, lcdCanvas);
+        screenStack[screensCount++] = screen;
+        screen_meta meta = screen->getMeta();
+        if (meta.autoUpdateInterval > 0) {
+            lcdRefreshTask.setInterval(meta.autoUpdateInterval);
+        } else {
+            lcdRefreshTask.setInterval(TASK_ONCE);
+        }
+        lcdRefreshTask.enable(); // render
+    }
+}
+
+void ScreenController::popScreen() {
+    if (screensCount > 0) {
+        // free memory for the screen
+        delete screenStack[screensCount - 1];
+        screenStack[screensCount - 1] = nullptr;
+        screensCount--;
+        if (screensCount == 0) {
+            lcdRefreshTask.setInterval(TASK_ONCE);
+            lcdRefreshTask.disable(); // render
+        } else {
+            screen_meta meta = screenStack[screensCount - 1]->getMeta();
+            if (meta.autoUpdateInterval > 0) {
+                lcdRefreshTask.setInterval(meta.autoUpdateInterval);
+            } else {
+                lcdRefreshTask.setInterval(TASK_ONCE);
+            }
+        }
+        lcdRefreshTask.restart(); // render
+    }
+}
+
+Task* ScreenController::getLcdRefreshTask() {
+    return &lcdRefreshTask;
 }

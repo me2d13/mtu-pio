@@ -10,7 +10,7 @@ axis_settings defaultAxisSettings[NUMBER_OF_AXIS] = {
     {274, 93, "SB", false},
     {3443, 1043, "THR1", true},
     {3945, 2265, "THR2", false},
-    {0, 4096, "FLAPS", false},
+    {2199, 3881, "FLAPS", false},
     {0, 4096, "TRIM", false}
 };
 motor_settings defaultMotorSettings[MOTORS_COUNT] = {

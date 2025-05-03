@@ -149,13 +149,20 @@ void MultiplexedPins::readInputPins() {
 void pollPins() {
     int current12VState = digitalRead(PIN_12V_IN);
     if (current12VState != last12VState) {
-        last12VState = current12VState;
         if (current12VState == LOW) {
             logger.log("12V power detected");
             ctx()->state.transient.set12Vpresent(true);
+            if (last12VState == HIGH) {
+                logger.log("Restarting LCD as 12V power was lost and now is present again");
+                // 12V was lost and now is present again (is not initial state when last12VState == 3)
+                // in this case re-initalize LCD
+                ctx()->screenController.hwSetup();
+                ctx()->screenController.render();
+            }
         } else {
             logger.log("12V power lost");
             ctx()->state.transient.set12Vpresent(false);
         }
+        last12VState = current12VState;
     }
 }

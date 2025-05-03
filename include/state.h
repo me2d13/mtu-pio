@@ -51,6 +51,7 @@ private:
     int buttonsRawValue;
     long roataryEncoderValue = 0;
     int rotaryButtonPressedTime = 0;
+    int rotaryButtonPressedCount = 0;
 public:
     TransientState() {
         for (int i = 0; i < NUMBER_OF_AXIS; i++) {
@@ -73,6 +74,8 @@ public:
     void setRotaryEncoderValue(long value) { this->roataryEncoderValue = value; }
     int getRotaryButtonPressedTime() { return this->rotaryButtonPressedTime; }
     void setRotaryButtonPressedTime(int value) { this->rotaryButtonPressedTime = value; }
+    int getRotaryButtonPressedCount() { return this->rotaryButtonPressedCount; }
+    void setRotaryButtonPressedCount(int value) { this->rotaryButtonPressedCount = value; }
     String reportState();
 };
 

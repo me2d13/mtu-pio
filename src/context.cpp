@@ -6,7 +6,7 @@
 #include "net.h"
 #include "i2c.h"
 #include <Wire.h>
-#include "lcd.h"
+#include "Screen.h"
 #include <TaskScheduler.h>
 #include "joy.h"
 #include "axis.h"
@@ -22,7 +22,7 @@
 
 GlobalContext instance;
 
-GlobalContext::GlobalContext() {};
+GlobalContext::GlobalContext() : screenController() {};
 
 EncoderInput rotaryEncoder; // doesn't have to be in .h file as it would introduce multiple implementation errors of attachInterrupt
 
@@ -45,10 +45,9 @@ void GlobalContext::setup()
     }
     state.persisted.loadFromFlash();
     
-    setupLcd();
+    screenController.setup();
     axesController.setup();
     logger.log("Axis initialized");
-    lcdAbout();
 
     if (ENABLE_HTTP_SERVER) {
         server = setupWeb();
@@ -62,6 +61,7 @@ void GlobalContext::setup()
     }
     rotaryEncoder.setup();
     motorsController.scheduleSetup(300); // must be after pins setup
+    screenController.render();
 }
 
 // registers port B

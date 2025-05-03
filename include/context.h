@@ -11,6 +11,7 @@
 #include "axis.h"
 #include "state.h"
 #include "udp.h"
+#include "Screen.h"
 
 class GlobalContext {
 public:
@@ -25,6 +26,7 @@ public:
   AxesController axesController;
   State state;
   XplaneInterface xplaneInterface;
+  ScreenController screenController;
   void debugCall(int index);
 private:
   AsyncWebServer* server;
