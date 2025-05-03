@@ -17,7 +17,7 @@
 #define PIN_UART_TX 5
 
 #define PIN_12V_IN 12
-#define PIN_OUT_PARK_LED 0
+#define PIN_OUT_PARK_LED 14
 #define PIN_BUTTONS_INTERRUPT 10
 
 
