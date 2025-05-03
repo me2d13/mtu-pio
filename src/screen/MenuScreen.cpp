@@ -1,6 +1,7 @@
 #include "screen/MenuScreen.h"
 #include "screen/InfoScreen.h"
 #include "screen/AxisScreen.h"
+#include "screen/ButtonsScreen.h"
 #include "context.h"
 #include "Logger.h"
 #include "config.h"
@@ -24,7 +25,7 @@ void MenuScreen::render()
         } else if (selectedItem == 1) {
             controller->pushScreen(new AxisScreen());
         } else if (selectedItem == 2) {
-            controller->pushScreen(new InfoScreen());
+            controller->pushScreen(new ButtonsScreen());
         }
         return;
     }
