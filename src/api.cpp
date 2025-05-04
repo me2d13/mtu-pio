@@ -17,12 +17,17 @@ ApiController::ApiController(GlobalContext *context) : server(context->getServer
             request->send(400, "application/json", "{\"error\":\"Missing command element\"}");
             return;
         }
+        String command = jsonObj["command"].as<String>();
+        if (command.equals("stopAll")) {
+            ctx()->motorsController.stopAllMotors();
+            request->send(200, "text/plain", "All motors stopped");
+            return;
+        }
         if (!jsonObj["index"].is<int>()) {
             request->send(400, "application/json", "{\"error\":\"Missing command index\"}");
             return;
         }
         // get command as string and index as int
-        String command = jsonObj["command"].as<String>();
         int index = jsonObj["index"].as<int>();
         ctx()->motorsController.handleApiCommand(index, command, request, jsonObj);
       });

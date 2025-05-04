@@ -42,4 +42,5 @@ public:
     void selectMotorUart(uint8_t addr);
     Motor *getMotor(int index);
     void handleApiCommand(int index, String command, AsyncWebServerRequest *request, JsonObject jsonObj);
+    void stopAllMotors();
 };

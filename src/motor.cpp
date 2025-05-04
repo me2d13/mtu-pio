@@ -207,3 +207,17 @@ void Motor::moveToPosition(long position) {
         << static_cast<int>(position) << " at speed " << static_cast<int>(speed);
     logger.log(ss.str());
 }
+
+void Motor::stopMotor() {
+    if (movingTask->isEnabled()) {
+        movingTask->disable();
+    }
+    if (steppingTask->isEnabled()) {
+        steppingTask->disable();
+    }
+    driver->VACTUAL(0);
+    disable();
+    std::stringstream ss;
+    ss << "Motor " << index << " stopped";
+    logger.log(ss.str());
+}

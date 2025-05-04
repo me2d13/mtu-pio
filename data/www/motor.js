@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const disableButton = document.querySelector("#disable");
     const sendStepsButton = document.querySelector("#steps-section button");
     const sendPositionButton = document.querySelector("#position-section button");
+    const stopAllButton = document.querySelector("#stop-all");
 
     const selectedMotor = () => {
         let motor = 0;
@@ -97,4 +98,6 @@ document.addEventListener('DOMContentLoaded', function() {
     enableButton.addEventListener("click", () => sendPostCommand("enable", "#enable-disable-section"));
     // on disable button click, send POST to /api/motors with command: "disable"
     disableButton.addEventListener("click", () => sendPostCommand("disable", "#enable-disable-section"));
+    // on stop all button click, send POST to /api/motors with command: "stopAll"
+    stopAllButton.addEventListener("click", () => sendPostCommand("stopAll", "#emergency-section"));
 });

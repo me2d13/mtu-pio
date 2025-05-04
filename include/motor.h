@@ -50,6 +50,7 @@ public:
     void disable();
     void debugCall();
     void moveToPosition(long position);
+    void stopMotor();
 };
 
 #endif // MOTOR_H

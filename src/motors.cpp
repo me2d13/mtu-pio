@@ -80,3 +80,10 @@ void MotorsController::handleApiCommand(int index, String command, AsyncWebServe
         request->send(400, "text/plain", "Unknown command " + command);
     }
 }
+
+void MotorsController::stopAllMotors() {
+    for (int i = 0; i < MOTORS_COUNT; i++) {
+        motors[i].stopMotor();
+    }
+    logger.log("All motors stopped");
+}
