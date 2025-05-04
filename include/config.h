@@ -31,11 +31,14 @@
 #define NUMBER_OF_DIGITAL_AXIS 5
 #define NUMBER_OF_AXIS 7
 #define NUMBER_OF_BUTTONS 16
+// throttle1, throttle2, flaps, reverse1, reverse2, trim, speed brake
 #define X_AXIS 1
 #define Y_AXIS 2
-#define Z_AXIS 0
-#define RX_AXIS 3
-#define RY_AXIS 4
+#define Z_AXIS 3
+#define RX_AXIS 5
+#define RY_AXIS 6
+#define BRAKE_AXIS 0
+#define RZ_AXIS 4
 
 #define MOTORS_COUNT 6
 #define MOTOR_THR1 4

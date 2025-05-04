@@ -143,13 +143,13 @@ void MultiplexedPins::readInputPins() {
         readStateDataAndSendJoy();
     }
     // handle parking LED - for now just hardcoded based on switch state
-    if (rawValue & (1 << 4)) {
-        setPin(PIN_OUT_PARK_LED, HIGH); // turn on LED
-    } else {
-        setPin(PIN_OUT_PARK_LED, LOW); // turn off LED
-    }
+    setParkingBrakeIndicator(rawValue & (1 << 4));
     String message = "MCP23017 read input pins: " + String(valueA, BIN) + " " + String(valueB, BIN);
     logger.log(message.c_str());
+}
+
+void MultiplexedPins::setParkingBrakeIndicator(bool value) {
+    setPin(PIN_OUT_PARK_LED, value ? HIGH : LOW);
 }
 
 void pollPins() {

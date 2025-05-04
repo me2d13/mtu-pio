@@ -16,4 +16,5 @@ public:
     void setPin(uint8_t pin, uint8_t value);
 	uint8_t read(uint8_t addr, uint8_t i2cAddress = 0);
 	void write(uint8_t addr, uint8_t value, uint8_t i2cAddress = 0);
+    void setParkingBrakeIndicator(bool value);
 };

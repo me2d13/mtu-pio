@@ -14,6 +14,8 @@ WiFiUDP udp;
 #define MAX_ERROR_LOG_COUNT 10
 #define MIN_PACKET_SIZE 41
 
+#define MESSAGE_LOGGING 0
+
 // Capture xpl UDP data: ncat -ul 49152 > xpldata.out
 
 void XplaneInterface::setup()
@@ -39,6 +41,8 @@ void XplaneInterface::parsePacket(char *buffer, int len)
         logError();
         return;
     }
+    // backup current xpl data so we can detect if it was updated
+    xpl_data backupXplData = *ctx()->state.transient.getXplData();
     int pos = 5;
     // after data we have 1..n groups of:
     //   1 byte message type (0x19 or 0x20)
@@ -49,17 +53,43 @@ void XplaneInterface::parsePacket(char *buffer, int len)
         // 25 commanded throttle (0x19)
         // 26 actual throttle (0x1A)
         // 13 trims (0x0D)
-        if (messageType != 0x19 && messageType != 0x1A && messageType != 0x0D) {
+        // 14 brakes (0x0E)
+        if (messageType != 0x19 && 
+            messageType != 0x0D &&
+            messageType != 0x0E) {
             sprintf(errorMessage, "Unsupported data type %d. Expected message type 13, 25 or 26. Skipping.", messageType);
             logError();
             pos += 1 + 3 + 8 * 4; // 1 byte message type + 3 bytes padding + 8 floats
         } else {
             pos += 1 + 3; // 1 byte message type + 3 bytes padding
             float *data = (float *)(buffer + pos);
-            char message[200];
-            sprintf(message, "UDP packet received type %d, data %f, %f ...", messageType, data[0], data[1]);
-            logger.log(message);
+            if (MESSAGE_LOGGING) {
+                char message[200];
+                sprintf(message, "UDP packet received type %d, data %f, %f ...", messageType, data[0], data[1]);
+                logger.log(message);
+            }
+            if (messageType == 0x19) {
+                // commanded throttle
+                ctx()->state.transient.getXplData()->throttle1 = data[0];
+                ctx()->state.transient.getXplData()->throttle2 = data[1];
+                ctx()->state.transient.getXplData()->lastUpdateTime = millis();
+            } else if (messageType == 0x0D) {
+                // trims
+                ctx()->state.transient.getXplData()->trim = data[0]; // roll trim
+                ctx()->state.transient.getXplData()->lastUpdateTime = millis();
+            } else if (messageType == 0x0E) {
+                // parking brake
+                ctx()->state.transient.getXplData()->parkingBrake = data[1] > 0.5f; // 0.0 = off, 1.0 = on
+                ctx()->state.transient.getXplData()->lastUpdateTime = millis();
+            }
             pos += 8 * 4; // 8 floats of 4 bytes each
+        }
+    }
+    // check if we have new data and update the state
+    if (memcmp(&backupXplData, ctx()->state.transient.getXplData(), sizeof(xpl_data)) != 0) {
+        // data changed, update the state
+        if (backupXplData.parkingBrake != ctx()->state.transient.getXplData()->parkingBrake) {
+            ctx()->pins.setParkingBrakeIndicator(ctx()->state.transient.getXplData()->parkingBrake);
         }
     }
 }

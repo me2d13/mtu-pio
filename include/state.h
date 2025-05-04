@@ -22,6 +22,15 @@ struct motor_settings
     char name[6];
 };
 
+struct xpl_data
+{
+    float throttle1;
+    float throttle2;
+    float trim;
+    bool parkingBrake;
+    unsigned long lastUpdateTime;
+};
+
 
 class PersistedState
 {
@@ -52,12 +61,14 @@ private:
     long roataryEncoderValue = 0;
     int rotaryButtonPressedTime = 0;
     int rotaryButtonPressedCount = 0;
+    xpl_data xplData;
 public:
     TransientState() {
         for (int i = 0; i < NUMBER_OF_AXIS; i++) {
             axisValues[i] = 0;
             axisReadFailures[i] = 0;
         }
+        xplData.lastUpdateTime = 0;
     }
     int getAxisValue(int index);
     int getCalibratedAxisValue(int index, axis_settings *settings);
@@ -76,6 +87,7 @@ public:
     void setRotaryButtonPressedTime(int value) { this->rotaryButtonPressedTime = value; }
     int getRotaryButtonPressedCount() { return this->rotaryButtonPressedCount; }
     void setRotaryButtonPressedCount(int value) { this->rotaryButtonPressedCount = value; }
+    xpl_data *getXplData() { return &this->xplData; }
     String reportState();
 };
 

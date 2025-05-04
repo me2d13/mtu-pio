@@ -12,8 +12,8 @@ axis_settings defaultAxisSettings[NUMBER_OF_AXIS] = {
     {3945, 2265, "THR2", false},
     {2199, 3881, "FLAPS", false},
     {0, 4096, "TRIM", false},
-    {0, 4096, "REV1", false},
-    {0, 4096, "REV2", false}
+    {2100, 0, "REV1", true},
+    {200, 3222, "REV2", false}
 };
 motor_settings defaultMotorSettings[MOTORS_COUNT] = {
     {400, 4, "THR1"},
@@ -83,7 +83,17 @@ String TransientState::reportState() {
             state += ",";
         }
     }
-    state += "]}";
+    state += "],";
+    state += "\"rotaryEncoderValue\":" + String(roataryEncoderValue) + ",";
+    state += "\"rotaryButtonPressedTime\":" + String(rotaryButtonPressedTime) + ",";
+    state += "\"rotaryButtonPressedCount\":" + String(rotaryButtonPressedCount) + ",";
+    state += "\"xplData\":{";
+    state += "\"throttle1\":" + String(xplData.throttle1) + ",";
+    state += "\"throttle2\":" + String(xplData.throttle2) + ",";
+    state += "\"trim\":" + String(xplData.trim) + ",";
+    state += "\"parkingBrake\":" + String(xplData.parkingBrake ? "true" : "false") + ",";
+    state += "\"lastUpdate\":" + String(xplData.lastUpdateTime);
+    state += "}}";
     return state;
 }
 

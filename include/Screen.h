@@ -19,6 +19,7 @@ protected:
     char *canvas;
     void printToCanvas(int col, int row, const char *text);
     void printToCanvasRpad(int col, int row, int value, int width);
+    void printToCanvasRpad(int col, int row, float value, int width);
 public:
     void init(ScreenController *controller, char *canvas) {
         this->controller = controller;

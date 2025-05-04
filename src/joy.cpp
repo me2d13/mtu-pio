@@ -13,8 +13,8 @@ COM9 is present in both scenarios
 
 Joystick_ joystick(JOYSTICK_DEFAULT_REPORT_ID, 
   JOYSTICK_TYPE_JOYSTICK, NUMBER_OF_BUTTONS, 0,
-  true, true, true, true, true, false, // x, y, z, rx, ry, rz
-  false, false, false, false, false); 
+  true, true, true, true, true, true, // x, y, z, rx, ry, rz
+  true, false, false, false, false); // rudder, throttle, accelerator, brake, steering
 
 int lastAxis[NUMBER_OF_AXIS];
 int lastRawButtons = 0;
@@ -36,6 +36,8 @@ void setupJoy() {
     joystick.setZAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
     joystick.setRxAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
     joystick.setRyAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
+    joystick.setRzAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
+    joystick.setRudderRange(0, AXIS_MAX_CALIBRATED_VALUE);
     joystick.begin(false);
    logger.log("Joystick started");
    joystick.sendState();
@@ -86,6 +88,14 @@ void setJoyAxis(int index, int value) {
     
     case RY_AXIS:
       joystick.setRyAxis(value);
+      break;
+
+    case RZ_AXIS:
+      joystick.setRzAxis(value);
+      break;
+
+    case BRAKE_AXIS:
+      joystick.setRudder(value);
       break;
     
     default:

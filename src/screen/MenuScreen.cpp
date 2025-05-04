@@ -2,12 +2,13 @@
 #include "screen/InfoScreen.h"
 #include "screen/AxisScreen.h"
 #include "screen/ButtonsScreen.h"
+#include "screen/XplScreen.h"
 #include "context.h"
 #include "Logger.h"
 #include "config.h"
 #include "Screen.h"
 
-#define MENU_ITEM_COUNT 3
+#define MENU_ITEM_COUNT 5
 
 screen_meta MenuScreen::getMeta()
 {
@@ -26,6 +27,8 @@ void MenuScreen::render()
             controller->pushScreen(new AxisScreen());
         } else if (selectedItem == 2) {
             controller->pushScreen(new ButtonsScreen());
+        } else if (selectedItem == 4) {
+            controller->pushScreen(new XplScreen());
         }
         return;
     }
@@ -46,14 +49,17 @@ void MenuScreen::render()
         lastRotaryPos = currentRotaryPos;
     }
     memccpy(canvas, 
-        "  Info              "
-        "  Axis              "
-        "  Buttons           "
-        "  Settings          "
+        " Info      XPL data "
+        " Axis               "
+        " Buttons            "
+        " Settings           "
         , 0, COLS * ROWS);
     // printToCanvasRpad(10, 3, currentRotaryPos, 4);
     // printToCanvasRpad(10, 3, ctx()->state.transient.getRotaryButtonPressedCount(), 4);
-    int selectedIndicatorPos = selectedItem * COLS;
+    int selectedIndicatorPos = (selectedItem % ROWS) * COLS;
+    if (selectedItem >= ROWS) {
+        selectedIndicatorPos += (COLS / 2); // second column
+    }
     canvas[selectedIndicatorPos] = '>';
-    canvas[selectedIndicatorPos + COLS - 1] = '<';
+    canvas[selectedIndicatorPos + COLS / 2 - 1] = '<';
 }

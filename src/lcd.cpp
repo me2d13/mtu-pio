@@ -130,6 +130,23 @@ void Screen::printToCanvasRpad(int col, int row, int value, int width) {
     }
 }
 
+void Screen::printToCanvasRpad(int col, int row, float value, int width) {
+    // print value to canvas buffer with right padding
+    // if value is too long, truncate it to fit in the buffer
+    char text[10];
+    sprintf(text, "%.4f", value);
+    int len = strlen(text);
+    if (len > width) {
+        len = width;
+    }
+    for (int i = 0; i < len; i++) {
+        canvas[row * COLS + col + i] = text[i];
+    }
+    for (int i = len; i < width; i++) {
+        canvas[row * COLS + col + i] = ' ';
+    }
+}
+
 void ScreenController::render() {
     if (screensCount == 0) {
         return;
