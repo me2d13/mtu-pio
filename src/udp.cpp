@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include "state.h"
 #include "config.h"
+#include <ArduinoJson.h>
 
 #include <WiFiUdp.h>
 
@@ -16,13 +17,28 @@ WiFiUDP udp;
 
 #define MESSAGE_LOGGING 0
 
+#define DATAREF_THROTTLE "sim/flightmodel/engine/ENGN_thro"
+#define DATAREF_TRIM "sim/flightmodel2/controls/elevator_trim"
+#define DATAREF_PARKING_BRAKE "laminar/B738/parking_brake_pos"
+#define DATAREF_SPEED_MODE "laminar/B738/autopilot/speed_mode"
+
+
 // Capture xpl UDP data: ncat -ul 49152 > xpldata.out
+
+// from https://developer.x-plane.com/article/x-plane-web-api/
+//  curl 'http://localhost:8086/api/v2/datarefs?filter\[name\]=laminar/B738/autopilot/speed_mode' -H 'Accept: application/json, text/plain, */*'
+//  curl 'http://localhost:8086/api/v2/datarefs/2463703123728/value'   -H 'Accept: application/json, text/plain, */*'
+
 
 void XplaneInterface::setup()
 {
-    udp.begin(UDP_PORT);
-    logger.print("UDP server started on port ");
-    logger.println(UDP_PORT);
+    if (udp.begin(UDP_PORT)) {
+        logger.print("UDP server started on port ");
+        logger.println(UDP_PORT);
+    } else {
+        logger.print("Failed to start UDP server on port ");
+        logger.println(UDP_PORT);
+    }
     udpCheckTask.set(UDP_CHECK_INTERVAL, TASK_FOREVER, [&]() { loopUdp(); });
     ctx()->taskScheduler.addTask(udpCheckTask);
     udpCheckTask.enable();
@@ -30,61 +46,29 @@ void XplaneInterface::setup()
 
 void XplaneInterface::parsePacket(char *buffer, int len)
 {
-    // packet format description: https://questions.x-plane.com/20760/where-can-i-get-x-plane-11-complete-udp-protocol
-    if (len < MIN_PACKET_SIZE) {
-        sprintf(errorMessage, "UDP packet too short: %d bytes, expected at least %d", len, MIN_PACKET_SIZE);
+    if (len == 0) {
+        sprintf(errorMessage, "Empty JSON string, nothing loaded");
         logError();
         return;
     }
-    if (strncmp(buffer, "DATA", 4) != 0) {
-        sprintf(errorMessage, "Invalid UDP packet, expected DATA at start");
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, buffer);
+    if (error) {
+        sprintf(errorMessage, "Failed to parse JSON: %s", error.c_str());
         logError();
         return;
     }
     // backup current xpl data so we can detect if it was updated
     xpl_data backupXplData = *ctx()->state.transient.getXplData();
-    int pos = 5;
-    // after data we have 1..n groups of:
-    //   1 byte message type (0x19 or 0x20)
-    //   3 bytes of padding (0x00)
-    //   8 floats each 4 bytes
-    while (pos < len) {
-        char messageType = buffer[pos];
-        // 25 commanded throttle (0x19)
-        // 26 actual throttle (0x1A)
-        // 13 trims (0x0D)
-        // 14 brakes (0x0E)
-        if (messageType != 0x19 && 
-            messageType != 0x0D &&
-            messageType != 0x0E) {
-            sprintf(errorMessage, "Unsupported data type %d. Expected message type 13, 25 or 26. Skipping.", messageType);
-            logError();
-            pos += 1 + 3 + 8 * 4; // 1 byte message type + 3 bytes padding + 8 floats
-        } else {
-            pos += 1 + 3; // 1 byte message type + 3 bytes padding
-            float *data = (float *)(buffer + pos);
-            if (MESSAGE_LOGGING) {
-                char message[200];
-                sprintf(message, "UDP packet received type %d, data %f, %f ...", messageType, data[0], data[1]);
-                logger.log(message);
-            }
-            if (messageType == 0x19) {
-                // commanded throttle
-                ctx()->state.transient.getXplData()->throttle1 = data[0];
-                ctx()->state.transient.getXplData()->throttle2 = data[1];
-                ctx()->state.transient.getXplData()->lastUpdateTime = millis();
-            } else if (messageType == 0x0D) {
-                // trims
-                ctx()->state.transient.getXplData()->trim = data[0]; // roll trim
-                ctx()->state.transient.getXplData()->lastUpdateTime = millis();
-            } else if (messageType == 0x0E) {
-                // parking brake
-                ctx()->state.transient.getXplData()->parkingBrake = data[1] > 0.5f; // 0.0 = off, 1.0 = on
-                ctx()->state.transient.getXplData()->lastUpdateTime = millis();
-            }
-            pos += 8 * 4; // 8 floats of 4 bytes each
-        }
+    ctx()->state.transient.getXplData()->throttle1 = doc[DATAREF_THROTTLE][0] | ctx()->state.transient.getXplData()->throttle1;
+    ctx()->state.transient.getXplData()->throttle2 = doc[DATAREF_THROTTLE][1] | ctx()->state.transient.getXplData()->throttle2;
+    ctx()->state.transient.getXplData()->trim = doc[DATAREF_TRIM] | ctx()->state.transient.getXplData()->trim;
+    float parkingBrakeValue = doc[DATAREF_PARKING_BRAKE] | -1.0f;
+    if (parkingBrakeValue >= 0.0f) {
+        ctx()->state.transient.getXplData()->parkingBrake = parkingBrakeValue > 0.5f; // 0.0 = off, 1.0 = on
     }
+    ctx()->state.transient.getXplData()->speedMode = doc[DATAREF_SPEED_MODE] | ctx()->state.transient.getXplData()->speedMode;
+    ctx()->state.transient.getXplData()->lastUpdateTime = millis();
     // check if we have new data and update the state
     if (memcmp(&backupXplData, ctx()->state.transient.getXplData(), sizeof(xpl_data)) != 0) {
         // data changed, update the state
@@ -98,10 +82,20 @@ void XplaneInterface::loopUdp()
 {
     int packetSize = udp.parsePacket();
     if (packetSize) {
-        int len = udp.read(packetBuffer, UDP_BUFFER_SIZE - 1);
-        if (len > 0) {
-            packetBuffer[len] = 0;
-            parsePacket(packetBuffer, len);
+        char *buffer = (char *)malloc(packetSize + 1);
+        if (buffer) {
+            int len = udp.read(buffer, packetSize);
+            if (len > 0) {
+                buffer[len] = 0;
+                if (MESSAGE_LOGGING) {
+                    logger.print("Received UDP packet: ");
+                    logger.println(buffer);
+                }
+                parsePacket(buffer, len);
+            }
+            free(buffer);
+        } else {
+            logger.log("Failed to allocate memory for UDP packet.");
         }
     }
 }
@@ -110,8 +104,7 @@ void XplaneInterface::logError()
 {
     errorsLogCount++;
     if (errorsLogCount < MAX_ERROR_LOG_COUNT) {
-        String message = "Error in UDP message received: " + String(packetBuffer);
-        logger.log(message.c_str());
+        logger.log("Error in UDP message");
         logger.log(errorMessage);
     } else if (errorsLogCount == MAX_ERROR_LOG_COUNT) {
         logger.log("Too many xplane interface errors, skipping further logging.");

@@ -34,12 +34,13 @@ public:
         memccpy(canvas, 
             "T1:        T2:      "
             "SB:        Tr:      "
-            "PB:                 "
+            "PB:        SM:      "
             "                    "
             , 0, COLS * ROWS);
         printToCanvasRpad(3, 0, ctx()->state.transient.getXplData()->throttle1, 6);
         printToCanvasRpad(14, 0, ctx()->state.transient.getXplData()->throttle2, 6);
         printToCanvasRpad(14, 1, ctx()->state.transient.getXplData()->trim, 6);
+        printToCanvasRpad(14, 2, ctx()->state.transient.getXplData()->speedMode, 6);
         printToCanvas(3, 2, ctx()->state.transient.getXplData()->parkingBrake ? "ON" : "OFF");
     }
 };

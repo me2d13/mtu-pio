@@ -7,7 +7,6 @@ class XplaneInterface
 {
 private:
     Task udpCheckTask;
-    char packetBuffer[255];
     char errorMessage[100];
     int errorsLogCount = 0;
     void parsePacket(char *buffer, int len);

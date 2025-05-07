@@ -20,6 +20,10 @@ int lastAxis[NUMBER_OF_AXIS];
 int lastRawButtons = 0;
 bool dirty = false;
 
+// reverse buttons 4 and 12 as joystick values
+//TODO: maybe put this to persisted settings
+int reversedButtonsMask = 0b0000100000001000; 
+
 void setJoyAxis(int index, int value);
 void sendJoy();
 
@@ -57,6 +61,9 @@ void readStateDataAndSendJoy() {
         lastRawButtons = ctx()->state.transient.getButtonsRawValue();
         for (int i = 0; i < NUMBER_OF_BUTTONS; i++) {
             int value = (lastRawButtons >> i) & 0x01;
+            if (reversedButtonsMask & (1 << i)) {
+                value = !value;
+            }
             joystick.setButton(i, value);
         }
     }
