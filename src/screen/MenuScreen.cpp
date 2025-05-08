@@ -4,6 +4,7 @@
 #include "screen/ButtonsScreen.h"
 #include "screen/XplScreen.h"
 #include "screen/SimCtrlScreen.h"
+#include "screen/SettingsScreen.h"
 #include "context.h"
 #include "Logger.h"
 #include "config.h"
@@ -28,6 +29,8 @@ void MenuScreen::render()
             controller->pushScreen(new AxisScreen());
         } else if (selectedItem == 2) {
             controller->pushScreen(new ButtonsScreen());
+        } else if (selectedItem == 3) {
+            controller->pushScreen(new SettingsScreen());
         } else if (selectedItem == 4) {
             controller->pushScreen(new XplScreen());
         } else if (selectedItem == 5) {

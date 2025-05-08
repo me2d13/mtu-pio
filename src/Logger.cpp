@@ -55,7 +55,8 @@ std::string Logger::getTimestamp() const
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo))
     {
-        return "Timestamp not available";
+        // return milis() if we can't get the time
+        return std::to_string(millis());
     }
 
     char timestamp[20];

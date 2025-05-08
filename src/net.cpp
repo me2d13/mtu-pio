@@ -39,7 +39,8 @@ std::string getTimeStr() {
 void syncNtp() {
     // Initialize time via NTP
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-    logger.log("Time synchronized with NTP server.");
+    logger.print("Time synchronized with NTP server at milis ");
+    logger.println(millis());
     // Log initial time
     logger.log("Current time: " + getTimeStr());
 }

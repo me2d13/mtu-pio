@@ -26,8 +26,12 @@ GlobalContext::GlobalContext() : screenController() {};
 
 EncoderInput rotaryEncoder; // doesn't have to be in .h file as it would introduce multiple implementation errors of attachInterrupt
 
+const char *LOG_TAG = "MTUcontext";
+
 void GlobalContext::setup()
 {
+    unsigned long startTime = millis();
+    logger.log("Starting up...");
     setupWifi();
     logger.log("IP Address: " + getIp());
     syncNtp();
@@ -62,6 +66,10 @@ void GlobalContext::setup()
     rotaryEncoder.setup();
     motorsController.scheduleSetup(300); // must be after pins setup
     screenController.render();
+    String msg = "Setup completed in " + String(millis() - startTime) + " ms";
+    logger.log(msg.c_str());
+    Serial.println(msg.c_str());
+    ESP_LOGI( LOG_TAG, "Setup completed in %d ms", millis() - startTime );
 }
 
 // registers port B

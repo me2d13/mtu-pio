@@ -18,7 +18,8 @@ WiFiUDP udp;
 #define MESSAGE_LOGGING 0
 
 #define DATAREF_THROTTLE "sim/flightmodel/engine/ENGN_thro"
-#define DATAREF_TRIM "sim/flightmodel2/controls/elevator_trim"
+//define DATAREF_TRIM "sim/flightmodel2/controls/elevator_trim"
+#define DATAREF_TRIM "laminar/B738/flight_model/stab_trim_units"
 #define DATAREF_PARKING_BRAKE "laminar/B738/parking_brake_pos"
 #define DATAREF_SPEED_MODE "laminar/B738/autopilot/speed_mode"
 

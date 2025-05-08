@@ -28,12 +28,17 @@ void setJoyAxis(int index, int value);
 void sendJoy();
 
 void setupJoy() {
-/*    USB.PID(0xDDFD);
-    USB.VID(0x5053);
-    USB.productName("MTU_v3");
+  if (ctx()->state.persisted.isHidOn) {
+    logger.log("Joystick is enabled in settings, enabling hid.");
+    USB.PID(0xDDFD);
+    USB.VID(0x5056);
+    USB.productName("MTU_v6");
     USB.manufacturerName("Me2d");
     USB.begin();
-    */
+  } else {
+    logger.log("Joystick is disabled in settings, skipping setup.");
+    return;
+  }
    logger.log("Setting up joystick...");
     joystick.setXAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
     joystick.setYAxisRange(0, AXIS_MAX_CALIBRATED_VALUE);
@@ -49,6 +54,9 @@ void setupJoy() {
 }
 
 void readStateDataAndSendJoy() {
+    if (!ctx()->state.persisted.isHidOn) {
+        return; // joystick is disabled in settings
+    }
     // read axis data from the sensors
     for (int i = 0; i < NUMBER_OF_AXIS; i++) {
         int value = ctx()->state.transient.getAxisValue(i);

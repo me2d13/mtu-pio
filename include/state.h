@@ -42,6 +42,7 @@ public:
     PersistedState();
     axis_settings axisSettings[NUMBER_OF_AXIS];
     motor_settings motorSettings[MOTORS_COUNT];
+    bool isHidOn = true;
     String reportState();
     String loadFromJson(String json);
     String loadFromJsonObject(JsonObject &jsonObject, boolean saveOnSuccess);
@@ -49,6 +50,7 @@ public:
     void resetToDefaultValues();
     void saveToFlash();
     void loadFromFlash();
+    void toggleHidOn();
 };
 
 class TransientState

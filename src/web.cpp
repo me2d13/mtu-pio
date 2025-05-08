@@ -7,6 +7,7 @@
 #include "web.h"
 #include <string>
 #include <vector>
+#include "esp32/clk.h"
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws"); // WebSocket on "/ws"
@@ -124,8 +125,18 @@ void servePage(
 }
 
 void handleLogRequest(AsyncWebServerRequest* request) {
+    unsigned long startTime = millis();
+    unsigned long freeHeap = ESP.getFreeHeap();
+    unsigned long minFreeHeap = ESP.getMinFreeHeap();
+    // cpu frequency
+    unsigned long cpuFreq = esp_clk_cpu_freq();
+    String cpuFreqStr = String(cpuFreq / 1000000) + " MHz";
+    String freeHeapStr = String(freeHeap / 1024) + " KB";
+    String minFreeHeapStr = String(minFreeHeap / 1024) + " KB";
+    String hwInfoLine = "CPU: " + cpuFreqStr + ", Free Heap: " + freeHeapStr + ", Min Free Heap: " + minFreeHeapStr;
     std::string body = "<h1>Log Entries</h1><ul id=\"logs\">";
     std::deque<std::string> logs = logger.getLogs();
+    body += String("<li>" + hwInfoLine + "</li>").c_str();
     for (const auto& log : logs) {
         body += "<li>";
         body += log;
@@ -133,6 +144,7 @@ void handleLogRequest(AsyncWebServerRequest* request) {
     }
     body += "</ul>";
     servePage(request, "Logs", body, "log");
+    logger.log(("Log page served in " + String(millis() - startTime) + " ms").c_str());
 }
 
 void handlePageRequest(AsyncWebServerRequest* request, const Page* page) {

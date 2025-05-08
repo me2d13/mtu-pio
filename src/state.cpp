@@ -130,6 +130,7 @@ void PersistedState::fillJsonDocument(JsonDocument &doc) {
         motorSetting["runCurrent"] = motorSettings[i].runCurrent;
         motorSetting["microSteps"] = motorSettings[i].microSteps;
     }
+    doc["isHidOn"] = isHidOn;
 }
 
 String PersistedState::loadFromJsonDocument(JsonDocument &doc) {
@@ -179,6 +180,7 @@ String PersistedState::loadFromJsonObject(JsonObject &root, boolean saveOnSucces
     } else {
         logger.log("Skipped: motorSettings array not found in JSON document");
     }
+    isHidOn = root["isHidOn"] | true;
     if (changesDone && saveOnSuccess) {
         logger.log("Changes applied to configuration, saving to flash memory");
         saveToFlash();
@@ -246,4 +248,10 @@ void PersistedState::loadFromFlash() {
     file.close();
     String result = loadFromJson(jsonString);
     logger.log(result.c_str());
+}
+
+void PersistedState::toggleHidOn() {
+    isHidOn = !isHidOn;
+    logger.log(("Toggled HID state to: " + String(isHidOn ? "ON" : "OFF")).c_str());
+    saveToFlash();
 }
