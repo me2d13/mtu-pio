@@ -73,6 +73,16 @@ void readStateDataAndSendJoy() {
 void setJoyAxis(int index, int value) {
   bool changed = (value != lastAxis[index]);
   if (changed) {
+    if (!ctx()->simDataDriver.canSendJoyValue(index)) {
+      // we don't send update when axis is being moved by motor
+      // in that case we also don't want to set joyAxisUpdated
+      return;
+    }
+    // set joyAxisUpdated but use 0.1% tolerance for axis value change
+    float delta = abs(value - lastAxis[index]);
+    if (delta > 0.001 * (float) AXIS_MAX_CALIBRATED_VALUE) {
+      ctx()->state.transient.joyAxisUpdated(index);
+    }
     dirty = true;
     lastAxis[index] = value;
     switch (index)

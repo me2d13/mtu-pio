@@ -63,3 +63,15 @@ This is 2nd version of custom software for motorised throttle unit (MTU) running
 ## PCB requested features
 - 3.3V from ESP32 board or externally (when board stab would not be strong enough)
 - 5V externally from 12V or from ESP32 board
+
+# Software
+## Lever movements based on simulator data
+There's some logic involved when controling motors of levers (throttles, speed brake) based on simulator data.
+1. sometimes the movement can be turned on/off in simulator (auto throttle on/off)
+1. levers are also joystick axes so changing position by motor would send update to simulator which recognizes manual interference and sends updated value back as state (which can cancel the movement)
+
+For now as a solution there is some logic around second point so first point can be moreless ignored. As side effect (of ignoring first point) the lever (e.g. throttle) position is updated also when user changes the position in simulator, e.g. using mouse in the cockpit.
+
+So what are the implemented rules
+- when levers is touched manually and new position is sent as joystick update it won't be moved by motor for some ignore period - currently one second. So if user is moving the lever actively it won't be moved by motor based on simulator value for some time
+- when new value is received from the simulator and lever needs to be moved the motor starts turning and no updates are sent on joystick axis during that time - until motor stops

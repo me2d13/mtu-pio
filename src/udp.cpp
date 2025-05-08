@@ -25,6 +25,9 @@ WiFiUDP udp;
 
 // Capture xpl UDP data: ncat -ul 49152 > xpldata.out
 
+// send udp packet
+// echo -n '{"sim/flightmodel/engine/ENGN_thro": [0.2, 0.0]}' | ncat -4u 192.168.1.112 49152
+
 // from https://developer.x-plane.com/article/x-plane-web-api/
 //  curl 'http://localhost:8086/api/v2/datarefs?filter\[name\]=laminar/B738/autopilot/speed_mode' -H 'Accept: application/json, text/plain, */*'
 //  curl 'http://localhost:8086/api/v2/datarefs/2463703123728/value'   -H 'Accept: application/json, text/plain, */*'
@@ -72,9 +75,7 @@ void XplaneInterface::parsePacket(char *buffer, int len)
     // check if we have new data and update the state
     if (memcmp(&backupXplData, ctx()->state.transient.getXplData(), sizeof(xpl_data)) != 0) {
         // data changed, update the state
-        if (backupXplData.parkingBrake != ctx()->state.transient.getXplData()->parkingBrake) {
-            ctx()->pins.setParkingBrakeIndicator(ctx()->state.transient.getXplData()->parkingBrake);
-        }
+        ctx()->simDataDriver.simDataChanged(backupXplData, *ctx()->state.transient.getXplData());
     }
 }
 

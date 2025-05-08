@@ -1,0 +1,61 @@
+#pragma once
+#include <Arduino.h>
+#include "state.h"
+
+
+enum AxisControlMode {
+    FREE,
+    CHASE,
+};
+
+struct driver_state {
+    const char *name;
+    float requestedValue;
+    int requestedPosition;
+    float currentValue;
+    int currentPosition;
+    AxisControlMode controlMode;
+};
+
+class ThrottleDriver
+{
+private:
+    int axisIndex;
+    int motorIndex;
+    driver_state state;
+public:
+    ThrottleDriver(int axisIndex, int motorIndex, const char *name) : axisIndex(axisIndex), motorIndex(motorIndex) {
+        state.name = name;
+        state.requestedValue = 0.0f;
+        state.requestedPosition = 0;
+        state.currentValue = 0.0f;
+        state.currentPosition = 0;
+        state.controlMode = FREE;
+    }
+    void throttleChanged(float oldValue, float newValue);
+    bool canSendJoyValue();
+    void motorStoppedAtPosition();
+    int getAxisIndex() { return axisIndex; }
+    int getMotorIndex() { return motorIndex; }
+    driver_state *getState();
+};
+
+class SimDataDriver
+{
+private:
+    ThrottleDriver *throttle1;
+    ThrottleDriver *throttle2;
+public:
+    SimDataDriver() {
+        throttle1 = new ThrottleDriver(AXIS_INDEX_THROTTLE_1, MOTOR_INDEX_THROTTLE_1, "Throttle 1 ");
+        throttle2 = new ThrottleDriver(AXIS_INDEX_THROTTLE_2, MOTOR_INDEX_THROTTLE_2, "Throttle 2 ");
+    }
+    ~SimDataDriver() {
+        delete throttle1;
+        delete throttle2;
+    }
+    void simDataChanged(xpl_data &oldXplData, xpl_data &newXplData);
+    bool canSendJoyValue(int axisIndex);
+    void motorStoppedAtPosition(int motorIndex);
+    driver_state *getState(int index);
+};

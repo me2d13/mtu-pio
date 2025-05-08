@@ -55,6 +55,7 @@ class TransientState
 {
 private:
     int axisValues[NUMBER_OF_AXIS];
+    unsigned long lastAxisJoyUpdate[NUMBER_OF_AXIS];
     bool twelveVPresent = false;
     int i2cChannelSwitchFailures = 0;
     int axisReadFailures[NUMBER_OF_AXIS];
@@ -68,6 +69,7 @@ public:
         for (int i = 0; i < NUMBER_OF_AXIS; i++) {
             axisValues[i] = 0;
             axisReadFailures[i] = 0;
+            lastAxisJoyUpdate[i] = 0;
         }
         xplData.lastUpdateTime = 0;
     }
@@ -88,6 +90,8 @@ public:
     void setRotaryButtonPressedTime(int value) { this->rotaryButtonPressedTime = value; }
     int getRotaryButtonPressedCount() { return this->rotaryButtonPressedCount; }
     void setRotaryButtonPressedCount(int value) { this->rotaryButtonPressedCount = value; }
+    void joyAxisUpdated(int index) { this->lastAxisJoyUpdate[index] = millis(); }
+    unsigned long getLastAxisJoyUpdate(int index) { return this->lastAxisJoyUpdate[index]; }
     xpl_data *getXplData() { return &this->xplData; }
     String reportState();
 };

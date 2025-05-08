@@ -6,6 +6,7 @@
 #include "context.h"
 #include "Logger.h"
 
+// link between axis index and I2C channel
 u_int8_t axisI2cIndexes[] = {
     I2C_CHANNEL_SPEED_BRAKE,
     I2C_CHANNEL_THROTTLE_1, 
@@ -18,7 +19,7 @@ void AxesController::setup() {
         logger.log("Axis setup skipped, ENABLE_SENSORS is 0");
         return;
     }
-    ctx()->i2c()->channel(axisI2cIndexes[4]);
+    ctx()->i2c()->channel(I2C_CHANNEL_THROTTLE_1);
     sensor = new AS5600(ctx()->i2c()->peripherals());
     if (sensor->begin()) {
         logger.log("Axis setup done OK");

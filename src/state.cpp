@@ -73,6 +73,14 @@ String TransientState::reportState() {
         }
     }
     state += "],";
+    state += "\"lastAxisJoyUpdate\":[";
+    for (int i = 0; i < NUMBER_OF_AXIS; i++) {
+        state += String(lastAxisJoyUpdate[i]);
+        if (i < NUMBER_OF_AXIS - 1) {
+            state += ",";
+        }
+    }
+    state += "],";
     state += "\"buttonsRawValue\":" + String(buttonsRawValue) + ",";
     state += "\"12VPresent\":" + String(twelveVPresent ? "true" : "false") + ",";
     state += "\"i2cChannelSwitchFailures\":" + String(i2cChannelSwitchFailures) + ",";

@@ -3,12 +3,13 @@
 #include "screen/AxisScreen.h"
 #include "screen/ButtonsScreen.h"
 #include "screen/XplScreen.h"
+#include "screen/SimCtrlScreen.h"
 #include "context.h"
 #include "Logger.h"
 #include "config.h"
 #include "Screen.h"
 
-#define MENU_ITEM_COUNT 5
+#define MENU_ITEM_COUNT 6
 
 screen_meta MenuScreen::getMeta()
 {
@@ -29,6 +30,8 @@ void MenuScreen::render()
             controller->pushScreen(new ButtonsScreen());
         } else if (selectedItem == 4) {
             controller->pushScreen(new XplScreen());
+        } else if (selectedItem == 5) {
+            controller->pushScreen(new SimCtrlScreen());
         }
         return;
     }
@@ -50,7 +53,7 @@ void MenuScreen::render()
     }
     memccpy(canvas, 
         " Info      XPL data "
-        " Axis               "
+        " Axis      Sim ctrl "
         " Buttons            "
         " Settings           "
         , 0, COLS * ROWS);

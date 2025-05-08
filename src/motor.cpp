@@ -99,6 +99,7 @@ void Motor::moveCallback() {
         movingSpeed = 0;
         movingTask->disable();
         disable();
+        ctx()->simDataDriver.motorStoppedAtPosition(index);
     } else {
         if (sensorReversed) {
             speed = -speed;
@@ -186,6 +187,7 @@ void Motor::moveToPosition(long position) {
     long currentPosition = ctx()->state.transient.getCalibratedAxisValue(axisIndex, &ctx()->state.persisted.axisSettings[axisIndex]);
     auto speed = calculateMoveSpeed(currentPosition, position);
     if (speed == 0) {
+        ctx()->simDataDriver.motorStoppedAtPosition(index);
         std::stringstream ss;
         ss << "Motor " << index << " already at target position " << static_cast<int>(position);
         logger.log(ss.str());

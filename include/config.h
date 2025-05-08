@@ -31,7 +31,17 @@
 #define NUMBER_OF_DIGITAL_AXIS 5
 #define NUMBER_OF_AXIS 7
 #define NUMBER_OF_BUTTONS 16
-// throttle1, throttle2, flaps, reverse1, reverse2, trim, speed brake
+
+// axis indexes in axes array
+#define AXIS_INDEX_THROTTLE_1 1
+#define AXIS_INDEX_THROTTLE_2 2
+#define AXIS_INDEX_SPEED_BRAKE 0
+#define AXIS_INDEX_FLAPS 3
+#define AXIS_INDEX_REVERSE_1 5
+#define AXIS_INDEX_REVERSE_2 6
+#define AXIS_INDEX_TRIM 4
+
+// axis indexes assigned to joystick axes
 #define X_AXIS 1
 #define Y_AXIS 2
 #define Z_AXIS 3
@@ -40,6 +50,15 @@
 #define BRAKE_AXIS 0
 #define RZ_AXIS 4
 
+// motor indexes in motors array
+#define MOTOR_INDEX_THROTTLE_1 0
+#define MOTOR_INDEX_THROTTLE_2 1
+#define MOTOR_INDEX_SPEED_BRAKE 2
+#define MOTOR_INDEX_TRIM 3
+#define MOTOR_INDEX_TRIM_IND_1 4
+#define MOTOR_INDEX_TRIM_IND_2 5
+
+// motor adresses for UART switching
 #define MOTORS_COUNT 6
 #define MOTOR_THR1 4
 #define MOTOR_THR2 5
@@ -63,6 +82,9 @@
 #define ENABLE_UDP 1
 
 #define AXIS_MAX_CALIBRATED_VALUE 10000
+
+// do not move lever by motor if changes were caused by mtu (joystick move)
+#define MOTORIZED_UPDATE_IGNORE_INTERVAL 1000 // 1 second
 
 /*
                                                                               

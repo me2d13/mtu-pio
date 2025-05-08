@@ -12,6 +12,7 @@
 #include "state.h"
 #include "udp.h"
 #include "Screen.h"
+#include "SimDataDriver.h"
 
 class GlobalContext {
 public:
@@ -27,6 +28,7 @@ public:
   State state;
   XplaneInterface xplaneInterface;
   ScreenController screenController;
+  SimDataDriver simDataDriver;
   void debugCall(int index);
 private:
   AsyncWebServer* server;
