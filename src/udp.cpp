@@ -28,6 +28,7 @@ WiFiUDP udp;
 
 // send udp packet
 // echo -n '{"sim/flightmodel/engine/ENGN_thro": [0.2, 0.0]}' | ncat -4u 192.168.1.112 49152
+// echo -n '{"laminar/B738/flight_model/stab_trim_units": 5.0}' | ncat -4u 192.168.1.112 49152
 
 // from https://developer.x-plane.com/article/x-plane-web-api/
 //  curl 'http://localhost:8086/api/v2/datarefs?filter\[name\]=laminar/B738/autopilot/speed_mode' -H 'Accept: application/json, text/plain, */*'

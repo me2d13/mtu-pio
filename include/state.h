@@ -43,6 +43,7 @@ public:
     axis_settings axisSettings[NUMBER_OF_AXIS];
     motor_settings motorSettings[MOTORS_COUNT];
     bool isHidOn = true;
+    int trimWheelVelocity = 500;
     String reportState();
     String loadFromJson(String json);
     String loadFromJsonObject(JsonObject &jsonObject, boolean saveOnSuccess);
@@ -74,6 +75,7 @@ public:
             lastAxisJoyUpdate[i] = 0;
         }
         xplData.lastUpdateTime = 0;
+        xplData.trim = -1.0f;
     }
     int getAxisValue(int index);
     int getCalibratedAxisValue(int index, axis_settings *settings);

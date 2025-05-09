@@ -73,6 +73,8 @@ void Motor::stepCallback() {
         ss << "Motor " << index << " finished step turn";
         logger.log(ss.str());
         steppingTask->disable();
+        disable();
+        ctx()->simDataDriver.motorStoppedAtPosition(index);
     } else {
         digitalWrite(stepPin, HIGH);
         digitalWrite(stepPin, LOW);
@@ -146,6 +148,21 @@ void Motor::makeSteps(int angle, int rpm) {
     steppingTask->setInterval(stepDelay);
     steppingTask->setIterations(TASK_FOREVER);
     steppingTask->enable();
+    enable();
+}
+
+// similar to makeSteps but adding angle to target steps
+// if motor is not moving, behaves exactly as makeSteps
+// if motor is moving, it will add steps to the current position and rpm is ignored
+void Motor::addSteps(int angle, int rpm) {
+    if (!steppingTask->isEnabled()) {
+        makeSteps(angle, rpm);
+        return;
+    }
+    int microstepsOrOne = (settings->microSteps == 0) ? 1 : settings->microSteps;
+    int deltaStepsToMake = (200 * angle * microstepsOrOne) / 360;
+    stepsToMake += deltaStepsToMake;
+    digitalWrite(dirPin, (stepsToMake > 0) ? HIGH : LOW);
 }
 
 void Motor::enable() {

@@ -26,6 +26,7 @@ public:
     void print(const char* message);
     void print(const char message);
     void print(int value) { print(std::to_string(value)); }
+    void print(float value) { print(std::to_string(value)); }
     void println(int value) { println(std::to_string(value)); }
     void println();
 

@@ -20,8 +20,8 @@ motor_settings defaultMotorSettings[MOTORS_COUNT] = {
     {400, 4, "THR2"},
     {400, 4, "SB"},
     {400, 0, "TRIM"},
-    {400, 16, "TRI1"},
-    {400, 16, "TRI2"}
+    {600, 16, "TRI1"},
+    {600, 16, "TRI2"}
 };
 
 PersistedState::PersistedState() {
@@ -131,6 +131,7 @@ void PersistedState::fillJsonDocument(JsonDocument &doc) {
         motorSetting["microSteps"] = motorSettings[i].microSteps;
     }
     doc["isHidOn"] = isHidOn;
+    doc["trimWheelVelocity"] = trimWheelVelocity;
 }
 
 String PersistedState::loadFromJsonDocument(JsonDocument &doc) {
@@ -181,6 +182,7 @@ String PersistedState::loadFromJsonObject(JsonObject &root, boolean saveOnSucces
         logger.log("Skipped: motorSettings array not found in JSON document");
     }
     isHidOn = root["isHidOn"] | true;
+    trimWheelVelocity = root["trimWheelVelocity"] | 500;
     if (changesDone && saveOnSuccess) {
         logger.log("Changes applied to configuration, saving to flash memory");
         saveToFlash();
@@ -212,7 +214,7 @@ void PersistedState::factoryReset() {
  }
 
 void PersistedState::resetToDefaultValues() {
-    // called from contructor, so no logging and fancy code here
+    // called from constructor, so no logging and fancy code here
     for (int i = 0; i < NUMBER_OF_AXIS; i++) {
         axisSettings[i] = defaultAxisSettings[i];
     }

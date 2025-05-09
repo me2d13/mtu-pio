@@ -3,7 +3,7 @@
 #include "context.h"
 #include "SimDataDriver.h"
 
-#define SUB_PAGES_COUNT 2
+#define SUB_PAGES_COUNT 3
 
 class SimCtrlScreen : public Screen
 {
