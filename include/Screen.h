@@ -40,7 +40,8 @@ public:
     void pushScreen(Screen *screen);
     void popScreen();
     void hwSetup(); // setup HW part only
-    void setup(); // setup HW part + screens
+    void menu(); // setup HW part + screens
     void render();
+    void showText(const char *text);
 };
 

@@ -31,16 +31,21 @@ const char *LOG_TAG = "MTUcontext";
 void GlobalContext::setup()
 {
     unsigned long startTime = millis();
-    logger.log("Starting up...");
-    setupWifi();
-    logger.log("IP Address: " + getIp());
-    syncNtp();
-    setupOTA();
-
     i2cController = new I2cController();
     i2cController->setup();
+    screenController.hwSetup();
+    logger.log("Starting up...");
+    screenController.showText("Setting WIFI...");
+    setupWifi();
+    logger.log("IP Address: " + getIp());
+    screenController.showText("Syncing time...");
+    syncNtp();
+    screenController.showText("Setting OTA...");
+    setupOTA();
+
     pins.scheduleSetup(*(i2cController->peripherals()), 100);
 
+    screenController.showText("Loading config...");
     // Initialize SPIFFS
     if (!SPIFFS.begin(true))
     {
@@ -49,7 +54,7 @@ void GlobalContext::setup()
     }
     state.persisted.loadFromFlash();
     
-    screenController.setup();
+    screenController.menu();
     axesController.setup();
     logger.log("Axis initialized");
 

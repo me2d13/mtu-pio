@@ -33,7 +33,7 @@ void I2cController::setup() {
     i2c[1]->begin(SDA_PIN_SENSORS, SCL_PIN_SENSORS);
     //scanI2CBus(_i2C1);
     //scanI2CBus(i2C2);
-    delay(1000);
+    //delay(1000);
     i2cMultiplexer = new TCA9548(0x70, i2c[0]);
     if (i2cMultiplexer->begin() == false)
     {

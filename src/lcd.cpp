@@ -74,7 +74,7 @@ void lcdTest() {
 }
 
 
-void ScreenController::setup() {
+void ScreenController::menu() {
     hwSetup();
     lcdRefreshTask.setIterations(TASK_FOREVER);
     lcdRefreshTask.setCallback([&]() {
@@ -99,6 +99,21 @@ void ScreenController::hwSetup() {
     lcd.clear();
     // reset lcd state
     memset(lcdState, 0, COLS * ROWS + 1);
+}
+
+void ScreenController::showText(const char *text) {
+    strcpy(lcdCanvas, 
+        "                    "
+        "                    "
+        "                    "
+        "            --MTU-- "
+    );
+    int len = strlen(text);
+    int textStart = COLS + (COLS -len) / 2;
+    for (int i = 0; i < len; i++) {
+        lcdCanvas[textStart + i] = text[i];
+    }
+    printCanvasToLcd();
 }
 
 void Screen::printToCanvas(int col, int row, const char *text) {
