@@ -132,6 +132,7 @@ void PersistedState::fillJsonDocument(JsonDocument &doc) {
     }
     doc["isHidOn"] = isHidOn;
     doc["trimWheelVelocity"] = trimWheelVelocity;
+    doc["enableTrimWheel"] = enableTrimWheel;
 }
 
 String PersistedState::loadFromJsonDocument(JsonDocument &doc) {
@@ -183,6 +184,7 @@ String PersistedState::loadFromJsonObject(JsonObject &root, boolean saveOnSucces
     }
     isHidOn = root["isHidOn"] | true;
     trimWheelVelocity = root["trimWheelVelocity"] | 500;
+    enableTrimWheel = root["enableTrimWheel"] | true;
     if (changesDone && saveOnSuccess) {
         logger.log("Changes applied to configuration, saving to flash memory");
         saveToFlash();

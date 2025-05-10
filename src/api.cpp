@@ -7,6 +7,7 @@
 
 // example of post request
 // curl -X POST http://192.168.1.112/api/motors -H 'Content-Type: application/json' -d '{"command":"moveToPosition","index":0, "parameters":{"position":5000}}'
+// curl -X POST http://192.168.1.112/api/state -H 'Content-Type: application/json' -d '{"trimWheelVelocity":10}'
 
 ApiController::ApiController(GlobalContext *context) : server(context->getServer()), context(context)
 {

@@ -186,6 +186,8 @@ int calculateMoveSpeed(long currentPosition, long targetPosition) {
     if (distance < AXIS_MAX_CALIBRATED_VALUE / 200) { // 0.5% of the range
         return 0;
     } else if (distance < AXIS_MAX_CALIBRATED_VALUE / 100) { // 1% of the range
+        speed = 2;
+    } else if (distance < AXIS_MAX_CALIBRATED_VALUE / 20) { // 5% of the range
         speed = 10;
     } else if (distance < AXIS_MAX_CALIBRATED_VALUE / 10) { // 10% of the range
         speed = 30;

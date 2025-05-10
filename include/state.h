@@ -44,6 +44,7 @@ public:
     motor_settings motorSettings[MOTORS_COUNT];
     bool isHidOn = true;
     int trimWheelVelocity = 500;
+    bool enableTrimWheel = true;
     String reportState();
     String loadFromJson(String json);
     String loadFromJsonObject(JsonObject &jsonObject, boolean saveOnSuccess);

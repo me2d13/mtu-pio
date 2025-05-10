@@ -3,7 +3,7 @@
 #include "context.h"
 #include "net.h"
 
-#define ITEMS_COUNT 3
+#define ITEMS_COUNT 4
 
 class SettingsScreen : public Screen
 {
@@ -42,23 +42,29 @@ public:
             if (selectedItem == 0) {
                 ctx()->state.persisted.toggleHidOn();
             } else if (selectedItem == 1) {
+                ctx()->state.persisted.enableTrimWheel = !ctx()->state.persisted.enableTrimWheel;
+                ctx()->state.persisted.saveToFlash();
+            } else if (selectedItem == 2) {
                 // hardware reset ESP32
                 ESP.restart();
-            } else if (selectedItem == 2) {
+            } else if (selectedItem == 3) {
                 ctx()->screenController.popScreen();
             }
             return;
         }
         memccpy(canvas, 
             " Joystick [ ]       "
+            " Trim wheel [ ]     "
             " Reset              "
             " Back               "
-            "                    "
             , 0, COLS * ROWS);
         canvas[COLS * selectedItem] = '>';
         canvas[COLS * selectedItem + COLS - 1] = '<';
         if (ctx()->state.persisted.isHidOn) {
             canvas[11] = 'X';
+        }
+        if (ctx()->state.persisted.enableTrimWheel) {
+            canvas[COLS + 13] = 'X';
         }
     }
 };

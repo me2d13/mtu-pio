@@ -90,10 +90,12 @@ void TrimDriver::trimChanged(float oldValue, float newValue) {
         #endif
         ctx()->motorsController.getMotor(motorIndexInd1)->addSteps(stepperAngleChange, TRIM_IND_VELOCITY);
         ctx()->motorsController.getMotor(motorIndexInd2)->addSteps(stepperAngleChange, TRIM_IND_VELOCITY);
-        auto wheelVelocity = trimAngleChange < 0 ? ctx()->state.persisted.trimWheelVelocity : -ctx()->state.persisted.trimWheelVelocity;
-        ctx()->motorsController.getMotor(motorIndexTrimWheel)->enable();
-        ctx()->motorsController.getMotor(motorIndexTrimWheel)->turnBySpeed(wheelVelocity);
-        trimWheelStopTask.restartDelayed(TRIM_WHEEL_FOLLOW_SPIN_MS);
+        if (ctx()->state.persisted.enableTrimWheel) {
+            auto wheelVelocity = trimAngleChange < 0 ? ctx()->state.persisted.trimWheelVelocity : -ctx()->state.persisted.trimWheelVelocity;
+            ctx()->motorsController.getMotor(motorIndexTrimWheel)->enable();
+            ctx()->motorsController.getMotor(motorIndexTrimWheel)->turnBySpeed(wheelVelocity);
+            trimWheelStopTask.restartDelayed(TRIM_WHEEL_FOLLOW_SPIN_MS);
+        }
         lastActionValue = newValue;
     } else if (oldValue == newValue) {
         if (trimWheelStopTask.isEnabled()) { // means wheel is turning
