@@ -23,6 +23,8 @@ WiFiUDP udp;
 #define DATAREF_PARKING_BRAKE "laminar/B738/parking_brake_pos"
 #define DATAREF_SPEED_MODE "laminar/B738/autopilot/speed_mode"
 
+#define _UDP_PROFILING
+#define UDP_PROFILING_BUFFER_SIZE 20
 
 // Capture xpl UDP data: ncat -ul 49152 > xpldata.out
 
@@ -34,6 +36,11 @@ WiFiUDP udp;
 //  curl 'http://localhost:8086/api/v2/datarefs?filter\[name\]=laminar/B738/autopilot/speed_mode' -H 'Accept: application/json, text/plain, */*'
 //  curl 'http://localhost:8086/api/v2/datarefs/2463703123728/value'   -H 'Accept: application/json, text/plain, */*'
 
+#ifdef UDP_PROFILING
+unsigned long lastTaskStart = 0;
+int taskRunDelays[UDP_PROFILING_BUFFER_SIZE];
+int taskRunDelayIndex = 0;
+#endif
 
 void XplaneInterface::setup()
 {
@@ -83,6 +90,22 @@ void XplaneInterface::parsePacket(char *buffer, int len)
 
 void XplaneInterface::loopUdp()
 {
+    #ifdef UDP_PROFILING
+      // verify & log correct timing of UDP check task
+      auto now = millis();
+      unsigned long fromLastRun = now - lastTaskStart;
+      lastTaskStart = now;
+      taskRunDelays[taskRunDelayIndex++] = fromLastRun;
+      if (taskRunDelayIndex == UDP_PROFILING_BUFFER_SIZE) {
+        logger.print("UDP check timing delays:");
+        for (int i = 0; i < UDP_PROFILING_BUFFER_SIZE; i++) {
+            logger.print(" ");
+            logger.print(taskRunDelays[i]);
+        }
+        logger.println(".");
+        taskRunDelayIndex = 0;
+      }
+    #endif
     int packetSize = udp.parsePacket();
     if (packetSize) {
         char *buffer = (char *)malloc(packetSize + 1);

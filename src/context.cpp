@@ -35,13 +35,15 @@ void GlobalContext::setup()
     i2cController->setup();
     screenController.hwSetup();
     logger.log("Starting up...");
-    screenController.showText("Setting WIFI...");
-    setupWifi();
-    logger.log("IP Address: " + getIp());
-    screenController.showText("Syncing time...");
-    syncNtp();
-    screenController.showText("Setting OTA...");
-    setupOTA();
+    if (ENABLE_NETWORK) {
+        screenController.showText("Setting WIFI...");
+        setupWifi();
+        logger.log("IP Address: " + getIp());
+        screenController.showText("Syncing time...");
+        syncNtp();
+        screenController.showText("Setting OTA...");
+        setupOTA();
+    }
 
     pins.scheduleSetup(*(i2cController->peripherals()), 100);
 
@@ -58,14 +60,14 @@ void GlobalContext::setup()
     axesController.setup();
     logger.log("Axis initialized");
 
-    if (ENABLE_HTTP_SERVER) {
+    if (ENABLE_HTTP_SERVER && ENABLE_NETWORK) {
         server = setupWeb();
         ApiController apiController(this);
     }
     if (ENABLE_JOYSTICK) {
         setupJoy();
     }
-    if (ENABLE_UDP) {
+    if (ENABLE_UDP && ENABLE_NETWORK) {
         xplaneInterface.setup();
     }
     rotaryEncoder.setup();

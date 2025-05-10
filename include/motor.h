@@ -45,8 +45,8 @@ public:
     void stepCallback();
     void moveCallback();
     void turnBySpeed(int speed);
-    void makeSteps(int numberOfSteps, int rpm);
-    void addSteps(int numberOfSteps, int rpm);
+    void makeSteps(float angle, int rpm);
+    void addSteps(float angle, int rpm);
     void enable();
     void disable();
     void debugCall();

@@ -77,6 +77,7 @@ void Motor::stepCallback() {
         ctx()->simDataDriver.motorStoppedAtPosition(index);
     } else {
         digitalWrite(stepPin, HIGH);
+        delayMicroseconds(10);
         digitalWrite(stepPin, LOW);
         if (stepsToMake > 0) {
             stepsToMake--;
@@ -128,11 +129,11 @@ void Motor::turnBySpeed(int speed) {
     }
 }
 
-void Motor::makeSteps(int angle, int rpm) {
+void Motor::makeSteps(float angle, int rpm) {
     int microstepsOrOne = (settings->microSteps == 0) ? 1 : settings->microSteps;
-    stepsToMake = (200 * angle * microstepsOrOne) / 360;
+    stepsToMake = round((200.0f * angle * microstepsOrOne) / 360.0f);
     int pulsesByRevolution = 200 * microstepsOrOne;
-    float stepsPerSecond = rpm * pulsesByRevolution / 60.0;
+    float stepsPerSecond = (( float) rpm * pulsesByRevolution) / 60.0f;
     stepDelay = round(1000.0 / stepsPerSecond);
     std::stringstream ss;
     ss << "MakeSteps: motor " << index << " - for " << static_cast<int>(stepsToMake) 
@@ -154,13 +155,13 @@ void Motor::makeSteps(int angle, int rpm) {
 // similar to makeSteps but adding angle to target steps
 // if motor is not moving, behaves exactly as makeSteps
 // if motor is moving, it will add steps to the current position and rpm is ignored
-void Motor::addSteps(int angle, int rpm) {
+void Motor::addSteps(float angle, int rpm) {
     if (!steppingTask->isEnabled()) {
         makeSteps(angle, rpm);
         return;
     }
     int microstepsOrOne = (settings->microSteps == 0) ? 1 : settings->microSteps;
-    int deltaStepsToMake = (200 * angle * microstepsOrOne) / 360;
+    int deltaStepsToMake = round((200.0f * angle * microstepsOrOne) / 360.0f);
     stepsToMake += deltaStepsToMake;
     digitalWrite(dirPin, (stepsToMake > 0) ? HIGH : LOW);
 }

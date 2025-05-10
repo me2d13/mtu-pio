@@ -5,10 +5,12 @@
 #include "config.h"
 #include "Logger.h"
 
-#define NOT_LOG_DECISIONS 
+#define LOG_DECISIONS 
 // 5 degrees of trim are 22 degrees of stepper
 #define STEPPER_ANGLE_PER_TRIM_ANGLE (22.0f/5.0f)
 #define TRIM_IND_VELOCITY 3
+#define NEEDLE_START_MOVE_DELTA_TRESHOLD 0.005f
+#define TRIM_WHEEL_FOLLOW_SPIN_MS 2000
 
 void ThrottleDriver::throttleChanged(float oldValue, float newValue) {
     int requestedPosition = newValue * (float) AXIS_MAX_CALIBRATED_VALUE;
@@ -51,13 +53,34 @@ driver_state *ThrottleDriver::getState() {
     return &state;
 }
 
-void TrimDriver::trimChanged(float oldValue, float newValue) {
-    if (oldValue < 0) {
-        // ignore, this is initial value, let's wait for real delta
+void TrimDriver::initTask() {
+    if (trimWheelStopTask.getIterations()) {
+        // already initialized
         return;
     }
-    float trimAngleChange = newValue - oldValue;
-    if (abs(trimAngleChange) > 0.001f) {
+    trimWheelStopTask.set(TASK_IMMEDIATE, TASK_ONCE, [&]() { 
+        ctx()->motorsController.getMotor(motorIndexTrimWheel)->turnBySpeed(0);
+        ctx()->motorsController.getMotor(motorIndexTrimWheel)->disable();
+     });
+    ctx()->taskScheduler.addTask(trimWheelStopTask);
+    trimWheelStopTask.enable();
+}
+
+void TrimDriver::trimChanged(float oldValue, float newValue) {
+    #ifdef LOG_DECISIONS
+        char message1[200];
+        sprintf(message1, "TRIM_MESSAGE Sim trim changed to %f.", newValue);
+        logger.log(message1);
+    #endif
+    state.requestedValue = newValue;
+    if (oldValue < 0 || lastActionValue < 0) {
+        initTask();
+        // ignore, this is initial value, let's wait for real delta
+        lastActionValue = newValue;
+        return;
+    }
+    float trimAngleChange = newValue - lastActionValue;
+    if (abs(trimAngleChange) > NEEDLE_START_MOVE_DELTA_TRESHOLD) {
         state.controlMode = CHASE;
         float stepperAngleChange = trimAngleChange * STEPPER_ANGLE_PER_TRIM_ANGLE;
         #ifdef LOG_DECISIONS
@@ -70,13 +93,31 @@ void TrimDriver::trimChanged(float oldValue, float newValue) {
         auto wheelVelocity = trimAngleChange < 0 ? ctx()->state.persisted.trimWheelVelocity : -ctx()->state.persisted.trimWheelVelocity;
         ctx()->motorsController.getMotor(motorIndexTrimWheel)->enable();
         ctx()->motorsController.getMotor(motorIndexTrimWheel)->turnBySpeed(wheelVelocity);
+        trimWheelStopTask.restartDelayed(TRIM_WHEEL_FOLLOW_SPIN_MS);
+        lastActionValue = newValue;
+    } else if (oldValue == newValue) {
+        if (trimWheelStopTask.isEnabled()) { // means wheel is turning
+            trimWheelStopTask.disable(); // and stop wheel now
+            ctx()->motorsController.getMotor(motorIndexTrimWheel)->turnBySpeed(0);
+            ctx()->motorsController.getMotor(motorIndexTrimWheel)->disable();
+        }
     }
+    #ifdef LOG_DECISIONS
+    else {
+        char message[200];
+        sprintf(message, "Trim not moved, old value %f, new value %f, last action value %f, delta %f.", oldValue, newValue, lastActionValue, trimAngleChange);
+        logger.log(message);
+    }
+    #endif
 }
 
 void TrimDriver::motorStoppedAtPosition() {
     state.controlMode = FREE;
-    ctx()->motorsController.getMotor(motorIndexTrimWheel)->turnBySpeed(0);
-    ctx()->motorsController.getMotor(motorIndexTrimWheel)->disable();
+}
+
+driver_state *TrimDriver::getState() {
+    state.currentValue = lastActionValue;
+    return &state;
 }
 
 void SimDataDriver::simDataChanged(xpl_data &oldXplData, xpl_data &newXplData) {
@@ -89,6 +130,8 @@ void SimDataDriver::simDataChanged(xpl_data &oldXplData, xpl_data &newXplData) {
     }
     throttle1->throttleChanged(oldXplData.throttle1, newXplData.throttle1);
     throttle2->throttleChanged(oldXplData.throttle2, newXplData.throttle2);
+    // call trim changed even with the same value on every message
+    // on same values handler will stop wheel movement
     trim->trimChanged(oldXplData.trim, newXplData.trim);
 }
 

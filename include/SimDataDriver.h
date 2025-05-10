@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "state.h"
+#include "TaskSchedulerDeclarations.h"
 
 
 enum AxisControlMode {
@@ -47,6 +48,10 @@ private:
     int motorIndexInd2;
     int motorIndexTrimWheel;
     driver_state state;
+    // last value which triggered motor move
+    float lastActionValue = -1.0f;
+    Task trimWheelStopTask;
+    void initTask();
 public:
     TrimDriver(int motorIndexInd1, int motorIndexInd2, int motorIndexTrimWheel, const char *name) : 
         motorIndexInd1(motorIndexInd1), motorIndexInd2(motorIndexInd2), motorIndexTrimWheel(motorIndexTrimWheel) {
@@ -61,7 +66,7 @@ public:
     int getMotorIndexInd1() { return motorIndexInd1; }
     int getMotorIndexInd2() { return motorIndexInd2; }
     int getMotorIndexTrimWheel() { return motorIndexTrimWheel; }
-    driver_state *getState() { return &state; }
+    driver_state *getState();
 };
     
 

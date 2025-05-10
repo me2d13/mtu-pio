@@ -1,6 +1,8 @@
 #include "Logger.h"
 #include <Arduino.h> // Needed for millis()
 #include <time.h>    // Needed for NTP time
+#include <chrono>
+#include <iomanip>
 
 Logger logger;
 
@@ -52,6 +54,7 @@ size_t Logger::size() const
 // Helper function to format the timestamp from the RTC (NTP)
 std::string Logger::getTimestamp() const
 {
+    using namespace std::chrono;
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo))
     {
@@ -59,9 +62,25 @@ std::string Logger::getTimestamp() const
         return std::to_string(millis());
     }
 
+    // get absolute wall time
+    auto now = system_clock::now();
+
+    // find the number of milliseconds
+    auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+
     char timestamp[20];
     strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &timeinfo);
-    return std::string(timestamp);
+
+    // build output string
+    std::ostringstream oss;
+    oss.fill('0');
+
+    // convert absolute time to time_t seconds
+    // and convert to "date time"
+    oss << std::string(timestamp);
+    oss << '.' << std::setw(3) << ms.count();
+
+    return oss.str();
 }
 
 void Logger::print(const std::string &message)
