@@ -12,6 +12,21 @@
 #define NEEDLE_START_MOVE_DELTA_TRESHOLD 0.005f
 #define TRIM_WHEEL_FOLLOW_SPIN_MS 2000
 
+#define PIN_END_STOP_IND1 11
+
+#define CP_NOT_STARTED 0
+#define CP_SEEKING_1_ON 1
+#define CP_SEEKING_1_OVERRUN 2
+#define CP_SEEKING_1_OFF 3
+#define CP_SEEKING_2_ON 4
+#define CP_SEEKING_2_OVERRUN 5
+#define CP_SEEKING_2_OFF 6
+#define CP_DONE 7
+
+#define END_STOP_POSITION_TRIM_1 4.0f
+#define END_STOP_POSITION_TRIM_2 4.0f
+#define CALIBRATED_NEW_POS 5.0f
+
 void ThrottleDriver::throttleChanged(float oldValue, float newValue) {
     int requestedPosition = newValue * (float) AXIS_MAX_CALIBRATED_VALUE;
     int currentPosition = ctx()->state.transient.getCalibratedAxisValue(axisIndex, &ctx()->state.persisted.axisSettings[axisIndex]);
@@ -53,20 +68,131 @@ driver_state *ThrottleDriver::getState() {
     return &state;
 }
 
-void TrimDriver::initTask() {
-    if (trimWheelStopTask.getIterations()) {
-        // already initialized
-        return;
-    }
+void TrimDriver::setup() {
     trimWheelStopTask.set(TASK_IMMEDIATE, TASK_ONCE, [&]() { 
         ctx()->motorsController.getMotor(motorIndexTrimWheel)->turnBySpeed(0);
         ctx()->motorsController.getMotor(motorIndexTrimWheel)->disable();
      });
     ctx()->taskScheduler.addTask(trimWheelStopTask);
-    trimWheelStopTask.enable();
+    calibrationTask.set(50, TASK_FOREVER, [&]() { 
+        calibrationTaskCallback();
+     });
+    ctx()->taskScheduler.addTask(calibrationTask);
+    // this is workaround, end stop for indicator 1 should be part of multiplexed input pins
+    // but because of hardware failure it was wired to free ESP32 pin directly
+    pinMode(PIN_END_STOP_IND1, INPUT_PULLUP);
+}
+
+bool TrimDriver::isEndStop2On() {
+    return !digitalRead(PIN_END_STOP_IND1);
+};
+
+bool TrimDriver::isEndStop1On() {
+    return (ctx()->state.transient.getButtonsRawValue() & (1 << 5));
+};
+
+
+void TrimDriver::calibrate() {
+    logger.log("Starting trim indicator calibration");
+    // stop both motors to be sure
+    ctx()->motorsController.getMotor(motorIndexInd1)->stopMotor();
+    ctx()->motorsController.getMotor(motorIndexInd2)->stopMotor();
+    // step 1 - move indicator to endstop1 ON position
+    // if already there, don't turn the motor and go to next phase
+    // if not, start the motor
+    if (!isEndStop1On()) {
+        ctx()->motorsController.getMotor(motorIndexInd1)->enable();
+        ctx()->motorsController.getMotor(motorIndexInd1)->turnBySpeed(-5);
+        logger.log("Trim indicator calibration - seeking for 1 ON position");
+        calibrationPhase = CP_SEEKING_1_ON;
+    } else {
+        calibrationPhase = CP_SEEKING_1_OVERRUN; // we're in save ON zone already
+    }
+    calibrationTask.enable();
+    calibrationStartTime = millis();
+}
+
+void TrimDriver::calibrationTaskCallback() {
+    if (millis() - calibrationStartTime > 10000) {
+        // step taking too long, probably end switch is not working, cancel that
+        logger.log("Trim indicator calibration taking too long, failing");
+        ctx()->motorsController.getMotor(motorIndexInd1)->stopMotor();
+        ctx()->motorsController.getMotor(motorIndexInd2)->stopMotor();
+        calibrationPhase = CP_NOT_STARTED;
+        calibrationTask.disable();
+    }
+    if (calibrationPhase == CP_SEEKING_1_ON) {
+        if (!isEndStop1On()) {
+            // just wait until motor gets there
+            return;
+        }
+        calibrationTask.delay(1000); // run motor 1 more second to don't stop exactly on switch trashold
+        calibrationPhase = CP_SEEKING_1_OVERRUN;
+        logger.log("Trim indicator calibration - runing over switch 1 position");
+    } else if (calibrationPhase == CP_SEEKING_1_OVERRUN) {
+        // now we have it on, so move backwards to find off position
+        ctx()->motorsController.getMotor(motorIndexInd1)->enable();
+        ctx()->motorsController.getMotor(motorIndexInd1)->turnBySpeed(5);
+        calibrationStartTime = millis();
+        logger.log("Trim indicator calibration - seeking for 1 OFF position");
+        calibrationPhase = CP_SEEKING_1_OFF;
+    } else if (calibrationPhase == CP_SEEKING_1_OFF) {
+        if (isEndStop1On()) {
+            // just wait until motor gets there
+            return;
+        }
+        ctx()->motorsController.getMotor(motorIndexInd1)->stopMotor();
+        // found the point with known value, record it as current position 
+        lastActionValue = CALIBRATED_NEW_POS;
+        ctx()->state.transient.getXplData()->trim = lastActionValue;
+        // and move to know position as both needles must have same value
+        float trimAngleChange = CALIBRATED_NEW_POS - END_STOP_POSITION_TRIM_1;
+        float stepperAngleChange = trimAngleChange * STEPPER_ANGLE_PER_TRIM_ANGLE;
+        ctx()->motorsController.getMotor(motorIndexInd1)->addSteps(stepperAngleChange, TRIM_IND_VELOCITY);
+        // do the same for indicator 2
+        if (!isEndStop2On()) {
+            ctx()->motorsController.getMotor(motorIndexInd2)->enable();
+            ctx()->motorsController.getMotor(motorIndexInd2)->turnBySpeed(-5);
+            logger.log("Trim indicator calibration - seeking for 2 ON position");
+        }
+        calibrationPhase = CP_SEEKING_2_ON;
+    } else if (calibrationPhase == CP_SEEKING_2_ON) {
+        if (!isEndStop2On()) {
+            // just wait until motor gets there
+            return;
+        }
+        calibrationTask.delay(1000); // run motor 1 more second to don't stop exactly on switch treshold
+        calibrationPhase = CP_SEEKING_2_OVERRUN;
+        logger.log("Trim indicator calibration - runing over switch 2 position");
+    } else if (calibrationPhase == CP_SEEKING_2_OVERRUN) {
+        // now we have it on, so move backwards to find off position
+        ctx()->motorsController.getMotor(motorIndexInd2)->enable();
+        ctx()->motorsController.getMotor(motorIndexInd2)->turnBySpeed(5);
+        logger.log("Trim indicator calibration - seeking for 2 OFF position");
+        calibrationPhase = CP_SEEKING_2_OFF;
+    } else if (calibrationPhase == CP_SEEKING_2_OFF) {
+        if (isEndStop2On()) {
+            // just wait until motor gets there
+            return;
+        }
+        ctx()->motorsController.getMotor(motorIndexInd2)->stopMotor();
+        // found the point with known value, record it as current position
+        // found the point with known value, record it as current position 
+        lastActionValue = CALIBRATED_NEW_POS;
+        ctx()->state.transient.getXplData()->trim = lastActionValue;
+        // and move to know position as both needles must have same value
+        float trimAngleChange = CALIBRATED_NEW_POS - END_STOP_POSITION_TRIM_2;
+        float stepperAngleChange = trimAngleChange * STEPPER_ANGLE_PER_TRIM_ANGLE;
+        ctx()->motorsController.getMotor(motorIndexInd2)->addSteps(stepperAngleChange, TRIM_IND_VELOCITY);
+        calibrationPhase = CP_DONE;
+        calibrationTask.disable();
+    }
 }
 
 void TrimDriver::trimChanged(float oldValue, float newValue) {
+    if (calibrationPhase > CP_NOT_STARTED && calibrationPhase < CP_DONE) {
+        return;
+    }
     #ifdef LOG_DECISIONS
         char message1[200];
         sprintf(message1, "TRIM_MESSAGE Sim trim changed to %f.", newValue);
@@ -74,9 +200,9 @@ void TrimDriver::trimChanged(float oldValue, float newValue) {
     #endif
     state.requestedValue = newValue;
     if (oldValue < 0 || lastActionValue < 0) {
-        initTask();
         // ignore, this is initial value, let's wait for real delta
         lastActionValue = newValue;
+        trimWheelStopTask.enable();
         return;
     }
     float trimAngleChange = newValue - lastActionValue;
@@ -167,3 +293,11 @@ driver_state *SimDataDriver::getState(int index) {
     }
     return nullptr;
 }
+
+void SimDataDriver::setup() {
+    trim->setup();
+};
+
+void SimDataDriver::calibrate() {
+    trim->calibrate();
+};

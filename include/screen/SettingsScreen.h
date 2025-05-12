@@ -46,7 +46,8 @@ public:
                 ctx()->state.persisted.saveToFlash();
             } else if (selectedItem == 2) {
                 // hardware reset ESP32
-                ESP.restart();
+                // ESP.restart();
+                ctx()->simDataDriver.calibrate();
             } else if (selectedItem == 3) {
                 ctx()->screenController.popScreen();
             }
@@ -55,7 +56,7 @@ public:
         memccpy(canvas, 
             " Joystick [ ]       "
             " Trim wheel [ ]     "
-            " Reset              "
+            " Calibrate trims    "
             " Back               "
             , 0, COLS * ROWS);
         canvas[COLS * selectedItem] = '>';

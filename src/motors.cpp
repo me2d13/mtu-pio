@@ -34,12 +34,14 @@ void MotorsController::setup() {
     motors[1].addSensor(2, false);
     motors[MOTOR_SPEED_BRAKE].addSensor(0, false);
     logger.log("Motors setup done");
+    ctx()->simDataDriver.calibrate();
 }
 
 void MotorsController::reInit() {
     for (int i = 0; i < MOTORS_COUNT; i++) {
         motors[i].reInitDriver();
     }
+    ctx()->simDataDriver.calibrate();
     logger.log("Motors re-initialized");
 }
 

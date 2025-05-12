@@ -46,7 +46,7 @@ public:
             "==                =="
             "Req:----- cal ----- "
             "Cur:----- cal ----- "
-            "State: -----        "
+            "St: -----           "
             , 0, COLS * ROWS);
         driver_state *state = ctx()->simDataDriver.getState(subPage);
         printToCanvas(3, 0, state->name);
@@ -55,11 +55,15 @@ public:
         printToCanvasRpad(4, 2, state->currentValue, 5);
         printToCanvasRpad(14, 2, state->currentPosition, 5);
         if (state->controlMode == FREE) {
-            printToCanvas(7, 3, "FREE ");
+            printToCanvas(4, 3, "FREE ");
         } else if (state->controlMode == CHASE) {
-            printToCanvas(7, 3, "CHASE ");
+            printToCanvas(4, 3, "CHASE ");
         } else {
-            printToCanvas(7, 3, "???? ");
+            printToCanvas(4, 3, "???? ");
+        }
+        if (subPage == 2) {
+            printToCanvas(10, 3, "CaliPh:");
+            printToCanvasRpad(18, 3, ctx()->simDataDriver.trim->getCalibrationPhase(), 1);
         }
     }
 };

@@ -73,6 +73,7 @@ void GlobalContext::setup()
     rotaryEncoder.setup();
     motorsController.scheduleSetup(300); // must be after pins setup
     screenController.render();
+    simDataDriver.setup();
     String msg = "Setup completed in " + String(millis() - startTime) + " ms";
     logger.log(msg.c_str());
     Serial.println(msg.c_str());

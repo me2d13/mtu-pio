@@ -51,7 +51,12 @@ private:
     // last value which triggered motor move
     float lastActionValue = -1.0f;
     Task trimWheelStopTask;
-    void initTask();
+    Task calibrationTask;
+    int calibrationPhase = 0;
+    unsigned long calibrationStartTime;
+    bool isEndStop1On();
+    bool isEndStop2On();
+    void calibrationTaskCallback();
 public:
     TrimDriver(int motorIndexInd1, int motorIndexInd2, int motorIndexTrimWheel, const char *name) : 
         motorIndexInd1(motorIndexInd1), motorIndexInd2(motorIndexInd2), motorIndexTrimWheel(motorIndexTrimWheel) {
@@ -61,12 +66,15 @@ public:
             state.currentValue = 0.0f;
             state.currentPosition = -1;
         }
+    void setup();
     void trimChanged(float oldValue, float newValue);
     void motorStoppedAtPosition();
     int getMotorIndexInd1() { return motorIndexInd1; }
     int getMotorIndexInd2() { return motorIndexInd2; }
     int getMotorIndexTrimWheel() { return motorIndexTrimWheel; }
+    int getCalibrationPhase() { return calibrationPhase; }
     driver_state *getState();
+    void calibrate();
 };
     
 
@@ -75,8 +83,8 @@ class SimDataDriver
 private:
     ThrottleDriver *throttle1;
     ThrottleDriver *throttle2;
-    TrimDriver *trim;
 public:
+    TrimDriver *trim;
     SimDataDriver() {
         throttle1 = new ThrottleDriver(AXIS_INDEX_THROTTLE_1, MOTOR_INDEX_THROTTLE_1, "Throttle 1 ");
         throttle2 = new ThrottleDriver(AXIS_INDEX_THROTTLE_2, MOTOR_INDEX_THROTTLE_2, "Throttle 2 ");
@@ -91,4 +99,6 @@ public:
     bool canSendJoyValue(int axisIndex);
     void motorStoppedAtPosition(int motorIndex);
     driver_state *getState(int index);
+    void setup();
+    void calibrate();
 };
