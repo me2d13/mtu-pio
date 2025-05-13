@@ -16,8 +16,8 @@ axis_settings defaultAxisSettings[NUMBER_OF_AXIS] = {
     {200, 3222, "REV2", false}
 };
 motor_settings defaultMotorSettings[MOTORS_COUNT] = {
-    {400, 4, "THR1"},
-    {400, 4, "THR2"},
+    {500, 4, "THR1"},
+    {600, 4, "THR2"},
     {400, 4, "SB"},
     {400, 0, "TRIM"},
     {600, 16, "TRI1"},
@@ -100,6 +100,8 @@ String TransientState::reportState() {
     state += "\"throttle2\":" + String(xplData.throttle2) + ",";
     state += "\"trim\":" + String(xplData.trim) + ",";
     state += "\"parkingBrake\":" + String(xplData.parkingBrake ? "true" : "false") + ",";
+    state += "\"autoThrottle\":" + String(xplData.autoThrottle ? "true" : "false") + ",";
+    state += "\"speedBrake\":" + String(xplData.speedBrake) + ",";
     state += "\"lastUpdate\":" + String(xplData.lastUpdateTime);
     state += "}}";
     return state;

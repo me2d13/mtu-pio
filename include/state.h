@@ -29,7 +29,8 @@ struct xpl_data
     float trim;
     bool parkingBrake;
     unsigned long lastUpdateTime;
-    float speedMode;
+    float speedBrake;
+    bool autoThrottle;
 };
 
 

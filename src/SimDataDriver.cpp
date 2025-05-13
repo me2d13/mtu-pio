@@ -5,7 +5,7 @@
 #include "config.h"
 #include "Logger.h"
 
-#define LOG_DECISIONS 
+#define __LOG_DECISIONS 
 // 5 degrees of trim are 22 degrees of stepper
 #define STEPPER_ANGLE_PER_TRIM_ANGLE (22.0f/5.0f)
 #define TRIM_IND_VELOCITY 3
@@ -27,7 +27,16 @@
 #define END_STOP_POSITION_TRIM_2 4.0f
 #define CALIBRATED_NEW_POS 5.0f
 
-void ThrottleDriver::throttleChanged(float oldValue, float newValue) {
+void ThrottleDriver::throttleChanged(float oldValue, float newValue, bool autoThrottle) {
+    if (!autoThrottle) {
+        // if AT is not on, never move the throttle lever
+        // should also consider THR HOLD but let's keep it simple
+        if (state.controlMode == CHASE) {
+            ctx()->motorsController.getMotor(motorIndex)->stopMotor();
+            state.controlMode = FREE;
+        }
+        return;
+    }
     int requestedPosition = newValue * (float) AXIS_MAX_CALIBRATED_VALUE;
     int currentPosition = ctx()->state.transient.getCalibratedAxisValue(axisIndex, &ctx()->state.persisted.axisSettings[axisIndex]);
     int delta = abs(currentPosition - requestedPosition);
@@ -256,8 +265,8 @@ void SimDataDriver::simDataChanged(xpl_data &oldXplData, xpl_data &newXplData) {
     if (oldXplData.parkingBrake != newXplData.parkingBrake) {
         ctx()->pins.setParkingBrakeIndicator(newXplData.parkingBrake);
     }
-    throttle1->throttleChanged(oldXplData.throttle1, newXplData.throttle1);
-    throttle2->throttleChanged(oldXplData.throttle2, newXplData.throttle2);
+    throttle1->throttleChanged(oldXplData.throttle1, newXplData.throttle1, newXplData.autoThrottle);
+    throttle2->throttleChanged(oldXplData.throttle2, newXplData.throttle2, newXplData.autoThrottle);
     // call trim changed even with the same value on every message
     // on same values handler will stop wheel movement
     trim->trimChanged(oldXplData.trim, newXplData.trim);

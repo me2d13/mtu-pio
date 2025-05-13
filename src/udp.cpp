@@ -21,7 +21,9 @@ WiFiUDP udp;
 //define DATAREF_TRIM "sim/flightmodel2/controls/elevator_trim"
 #define DATAREF_TRIM "laminar/B738/flight_model/stab_trim_units"
 #define DATAREF_PARKING_BRAKE "laminar/B738/parking_brake_pos"
-#define DATAREF_SPEED_MODE "laminar/B738/autopilot/speed_mode"
+//#define DATAREF_SPEED_MODE "laminar/B738/autopilot/speed_mode"
+#define DATAREF_SPEED_BRAKE "laminar/B738/flt_ctrls/speedbrake_lever"
+#define DATAREF_AT_STATE "laminar/B738/autopilot/autothrottle_status1"
 
 #define _UDP_PROFILING
 #define UDP_PROFILING_BUFFER_SIZE 20
@@ -79,7 +81,11 @@ void XplaneInterface::parsePacket(char *buffer, int len)
     if (parkingBrakeValue >= 0.0f) {
         ctx()->state.transient.getXplData()->parkingBrake = parkingBrakeValue > 0.5f; // 0.0 = off, 1.0 = on
     }
-    ctx()->state.transient.getXplData()->speedMode = doc[DATAREF_SPEED_MODE] | ctx()->state.transient.getXplData()->speedMode;
+    float autoThrottleValue = doc[DATAREF_AT_STATE] | -1.0f;
+    if (autoThrottleValue >= 0.0f) {
+        ctx()->state.transient.getXplData()->autoThrottle = autoThrottleValue > 0.5f; // 0.0 = off, 1.0 = on
+    }
+    ctx()->state.transient.getXplData()->speedBrake = doc[DATAREF_SPEED_BRAKE] | ctx()->state.transient.getXplData()->speedBrake;
     ctx()->state.transient.getXplData()->lastUpdateTime = millis();
     // check if we have new data and update the state
     if (memcmp(&backupXplData, ctx()->state.transient.getXplData(), sizeof(xpl_data)) != 0) {

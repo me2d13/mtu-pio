@@ -33,7 +33,7 @@ public:
         state.currentPosition = 0;
         state.controlMode = FREE;
     }
-    void throttleChanged(float oldValue, float newValue);
+    void throttleChanged(float oldValue, float newValue, bool autoThrottle);
     bool canSendJoyValue();
     void motorStoppedAtPosition();
     int getAxisIndex() { return axisIndex; }
