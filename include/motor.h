@@ -28,7 +28,7 @@ private:
     Task *movingTask;
     TMC2208Stepper *driver;
     motor_settings *settings;
-
+    int calculateMoveSpeed(long currentPosition, long targetPosition);
 public:
     // Constructor with default values for rmsCurrent and microsteps
     Motor(int motorIndex, int uartChannel, int step, int dir);

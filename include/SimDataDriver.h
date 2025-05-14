@@ -77,6 +77,28 @@ public:
     void calibrate();
 };
     
+class SpeedBrakeDriver
+{
+private:
+    int axisIndex;
+    int motorIndex;
+    driver_state state;
+public:
+    SpeedBrakeDriver(int axisIndex, int motorIndex, const char *name) : axisIndex(axisIndex), motorIndex(motorIndex) {
+        state.name = name;
+        state.requestedValue = 0.0f;
+        state.requestedPosition = 0;
+        state.currentValue = 0.0f;
+        state.currentPosition = 0;
+        state.controlMode = FREE;
+    }
+    void speedBrakeChanged(float oldValue, float newValue);
+    bool canSendJoyValue();
+    void motorStoppedAtPosition();
+    int getAxisIndex() { return axisIndex; }
+    int getMotorIndex() { return motorIndex; }
+    driver_state *getState();
+};
 
 class SimDataDriver
 {
@@ -85,15 +107,18 @@ private:
     ThrottleDriver *throttle2;
 public:
     TrimDriver *trim;
+    SpeedBrakeDriver *speedBrake;
     SimDataDriver() {
         throttle1 = new ThrottleDriver(AXIS_INDEX_THROTTLE_1, MOTOR_INDEX_THROTTLE_1, "Throttle 1 ");
         throttle2 = new ThrottleDriver(AXIS_INDEX_THROTTLE_2, MOTOR_INDEX_THROTTLE_2, "Throttle 2 ");
         trim = new TrimDriver(MOTOR_INDEX_TRIM_IND_1, MOTOR_INDEX_TRIM_IND_2, MOTOR_INDEX_TRIM, "Trim       ");
+        speedBrake = new SpeedBrakeDriver(AXIS_INDEX_SPEED_BRAKE, MOTOR_INDEX_SPEED_BRAKE, "Speed brake");
     }
     ~SimDataDriver() {
         delete throttle1;
         delete throttle2;
         delete trim;
+        delete speedBrake;
     }
     void simDataChanged(xpl_data &oldXplData, xpl_data &newXplData);
     bool canSendJoyValue(int axisIndex);

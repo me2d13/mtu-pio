@@ -84,7 +84,7 @@ ApiController::ApiController(GlobalContext *context) : server(context->getServer
           bool factoryReset = jsonObj["factoryReset"].as<bool>();
           if (factoryReset) {
             ctx()->state.persisted.factoryReset();
-            request->send(200, "text/plain", "Factory reset done");
+            request->send(200, "text/plain", "Factory reset done. Don't forget to Save");
             return;
           }
           String result = ctx()->state.persisted.loadFromJsonObject(jsonObj, true);

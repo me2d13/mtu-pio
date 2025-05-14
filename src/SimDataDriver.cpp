@@ -77,6 +77,47 @@ driver_state *ThrottleDriver::getState() {
     return &state;
 }
 
+void SpeedBrakeDriver::speedBrakeChanged(float oldValue, float newValue) {
+    int requestedPosition = newValue * (float) AXIS_MAX_CALIBRATED_VALUE;
+    int currentPosition = ctx()->state.transient.getCalibratedAxisValue(axisIndex, &ctx()->state.persisted.axisSettings[axisIndex]);
+    int delta = abs(currentPosition - requestedPosition);
+    #ifdef LOG_DECISIONS
+        logger.print(state.name);
+        logger.print(" changed from ");
+        logger.print(oldValue);
+        logger.print(" to ");
+        logger.print(newValue);
+        logger.print(" delta: ");
+        logger.println(delta);
+    #endif
+    int timeFromLastManualUpdate = millis() - ctx()->state.transient.getLastAxisJoyUpdate(axisIndex);
+    // we start only on change of 0.5%
+    if (delta > AXIS_MAX_CALIBRATED_VALUE / 200 && timeFromLastManualUpdate > MOTORIZED_UPDATE_IGNORE_INTERVAL) {
+        state.requestedValue = newValue;
+        state.requestedPosition = requestedPosition;
+        logger.print("Because of update from simulator, moving speed brake to ");
+        logger.println(state.requestedPosition);
+        ctx()->motorsController.getMotor(motorIndex)->moveToPosition(state.requestedPosition);
+        state.controlMode = CHASE; // joystick updates won't be sent until motor stops to not receive updates from simulator
+    }
+}
+
+bool SpeedBrakeDriver::canSendJoyValue() {
+    return (state.controlMode == FREE);
+}
+
+void SpeedBrakeDriver::motorStoppedAtPosition() {
+    if (state.controlMode == CHASE) {
+        state.controlMode = FREE; // motor stopped, we can send joystick updates again
+    }
+}
+
+driver_state *SpeedBrakeDriver::getState() {
+    state.currentValue = ctx()->state.transient.getAxisValue(axisIndex);
+    state.currentPosition = ctx()->state.transient.getCalibratedAxisValue(axisIndex, &ctx()->state.persisted.axisSettings[axisIndex]);
+    return &state;
+}
+
 void TrimDriver::setup() {
     trimWheelStopTask.set(TASK_IMMEDIATE, TASK_ONCE, [&]() { 
         ctx()->motorsController.getMotor(motorIndexTrimWheel)->turnBySpeed(0);
@@ -270,6 +311,7 @@ void SimDataDriver::simDataChanged(xpl_data &oldXplData, xpl_data &newXplData) {
     // call trim changed even with the same value on every message
     // on same values handler will stop wheel movement
     trim->trimChanged(oldXplData.trim, newXplData.trim);
+    speedBrake->speedBrakeChanged(oldXplData.speedBrake, newXplData.speedBrake);
 }
 
 bool SimDataDriver::canSendJoyValue(int axisIndex) {
@@ -278,6 +320,8 @@ bool SimDataDriver::canSendJoyValue(int axisIndex) {
         return throttle1->canSendJoyValue();
     } else if (axisIndex == throttle2->getAxisIndex()) {
         return throttle2->canSendJoyValue();
+    } else if (axisIndex == speedBrake->getAxisIndex()) {
+        return speedBrake->canSendJoyValue();
     }
     return true;
 }
@@ -287,6 +331,8 @@ void SimDataDriver::motorStoppedAtPosition(int motorIndex) {
         throttle1->motorStoppedAtPosition();
     } else if (motorIndex == throttle2->getMotorIndex()) {
         throttle2->motorStoppedAtPosition();
+    } else if (motorIndex == speedBrake->getMotorIndex()) {
+        speedBrake->motorStoppedAtPosition();
     } else if (motorIndex == trim->getMotorIndexInd1()) {
         trim->motorStoppedAtPosition();
     }
@@ -299,6 +345,8 @@ driver_state *SimDataDriver::getState(int index) {
         return throttle2->getState();
     } else if (index == 2) {
         return trim->getState();
+    } else if (index == 3) {
+        return speedBrake->getState();
     }
     return nullptr;
 }

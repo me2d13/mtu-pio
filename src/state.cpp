@@ -7,7 +7,7 @@
 #include <SPIFFS.h>
 
 axis_settings defaultAxisSettings[NUMBER_OF_AXIS] = {
-    {274, 93, "SB", false},
+    {320, 4013, "SB", false},
     {3443, 1043, "THR1", true},
     {3945, 2265, "THR2", false},
     {2199, 3881, "FLAPS", false},
@@ -16,12 +16,12 @@ axis_settings defaultAxisSettings[NUMBER_OF_AXIS] = {
     {200, 3222, "REV2", false}
 };
 motor_settings defaultMotorSettings[MOTORS_COUNT] = {
-    {500, 4, "THR1"},
-    {600, 4, "THR2"},
-    {400, 4, "SB"},
-    {400, 0, "TRIM"},
-    {600, 16, "TRI1"},
-    {600, 16, "TRI2"}
+    {500, 4, "THR1", 1.0f},
+    {600, 4, "THR2", 1.0f},
+    {800, 4, "SB", 4.0f},
+    {400, 0, "TRIM", 1.0f},
+    {600, 16, "TRI1", 1.0f},
+    {600, 16, "TRI2", 1.0f}
 };
 
 PersistedState::PersistedState() {
@@ -131,6 +131,7 @@ void PersistedState::fillJsonDocument(JsonDocument &doc) {
         motorSetting["name"] = motorSettings[i].name;
         motorSetting["runCurrent"] = motorSettings[i].runCurrent;
         motorSetting["microSteps"] = motorSettings[i].microSteps;
+        motorSetting["speedMultiplier"] = motorSettings[i].speedMultiplier;
     }
     doc["isHidOn"] = isHidOn;
     doc["trimWheelVelocity"] = trimWheelVelocity;
@@ -178,6 +179,7 @@ String PersistedState::loadFromJsonObject(JsonObject &root, boolean saveOnSucces
             JsonObject motorSetting = motorSettingsArray[i];
             motorSettings[i].runCurrent = motorSetting["runCurrent"];
             motorSettings[i].microSteps = motorSetting["microSteps"];
+            motorSettings[i].speedMultiplier = motorSetting["speedMultiplier"] | 1.0f;
         }
         changesDone = true;
         logger.log("Motor settings loaded successfully");
@@ -225,6 +227,9 @@ void PersistedState::resetToDefaultValues() {
     for (int i = 0; i < MOTORS_COUNT; i++) {
         motorSettings[i] = defaultMotorSettings[i];
     }
+    isHidOn = true;
+    trimWheelVelocity = 500;
+    enableTrimWheel = true;
 }
 
 void PersistedState::saveToFlash() {

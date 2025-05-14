@@ -20,6 +20,7 @@ struct motor_settings
     int runCurrent;
     int microSteps;
     char name[6];
+    float speedMultiplier; // relative speed-up/slow-down when moving to position (e.g. have speed brake faster than throttles)
 };
 
 struct xpl_data
