@@ -3,35 +3,43 @@
 #include "context.h"
 #include "net.h"
 
-
-class InfoScreen : public Screen
+class InfoScreen : public ScreenWithMenu
 {
-private:
 public:
-    InfoScreen() {}
     screen_meta getMeta() override { 
         screen_meta result; 
         result.autoUpdateInterval = 1000; // 1 second
         return result;
     };
 
-    void render() override {
-        if (ctx()->state.transient.getRotaryButtonPressedTime() > 0) {
-            // rotary button pressed, do something
-            ctx()->state.transient.setRotaryButtonPressedTime(0);
+    int getItemsCount() override {
+        return 2;
+    }
+
+    void onSelect() override {
+        if (selectedItem == 1) {
+            setupWifi();
+        } else if (selectedItem == 0) {
             controller->popScreen();
-            return;
         }
+    }
+
+    void doRender() override {
         memccpy(canvas, 
             "IP :                "
             "      M  T  U       "
-            "T1: ????   T2: ???? "
             "                    "
+            " Back  Restart WiFi "
             , 0, COLS * ROWS);
         printToCanvas(4, 0, getIp().c_str());
-        printToCanvasRpad(4, 2, ctx()->state.transient.getAxisValue(1), 4);
-        printToCanvasRpad(15, 2, ctx()->state.transient.getAxisValue(2), 4);
-        printToCanvas(0, 3, getTimeStr().c_str());
+        printToCanvas(0, 2, getTimeStr().c_str());
+        if (selectedItem == 0) {
+            canvas[3*COLS] = '>';
+            canvas[3*COLS + 5] = '<';
+        } else {
+            canvas[3*COLS + 6] = '>';
+            canvas[3*COLS + 19] = '<';
+        }
     }
 };
 

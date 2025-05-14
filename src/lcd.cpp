@@ -209,3 +209,31 @@ void ScreenController::popScreen() {
 Task* ScreenController::getLcdRefreshTask() {
     return &lcdRefreshTask;
 }
+
+ScreenWithMenu::ScreenWithMenu() {
+    lastRotaryPos = ctx()->state.transient.getRotaryEncoderValue();
+}
+
+void ScreenWithMenu::render() {
+    if (lastRotaryPos != ctx()->state.transient.getRotaryEncoderValue()) {
+        int delta = ctx()->state.transient.getRotaryEncoderValue() - lastRotaryPos;
+        if (delta > 0) {
+            selectedItem++;
+            if (selectedItem >= getItemsCount()) {
+                selectedItem = getItemsCount() - 1;
+            }
+        } else {
+            selectedItem--;
+            if (selectedItem < 0) {
+                selectedItem = 0;
+            }
+        }
+        lastRotaryPos = ctx()->state.transient.getRotaryEncoderValue();
+    }
+    if (ctx()->state.transient.getRotaryButtonPressedTime() > 0) {
+        // rotary button pressed, do something
+        ctx()->state.transient.setRotaryButtonPressedTime(0);
+        onSelect();
+    }
+    doRender();
+}

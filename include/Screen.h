@@ -45,3 +45,15 @@ public:
     void showText(const char *text);
 };
 
+class ScreenWithMenu : public Screen
+{
+protected:
+    int lastRotaryPos;
+    int selectedItem = 0;
+    virtual int getItemsCount() = 0;
+    virtual void doRender() = 0;
+    virtual void onSelect() = 0;
+public:
+    ScreenWithMenu();
+    void render() override;
+};
