@@ -4,6 +4,8 @@
 #include "context.h"
 #include "axis.h"
 
+#define ALLOW_REVERSE_BLOCKING
+
 /* 
 
 When joystick is enabled in platformio.ini, I have new COM8 Serial + HID device. Upload via OTA or boot button
@@ -81,6 +83,14 @@ void readStateDataAndSendJoy() {
 void setJoyAxis(int index, int value) {
   bool changed = (value != lastAxis[index]);
   if (changed) {
+    #ifdef ALLOW_REVERSE_BLOCKING
+    // this is ugly hw hack. Reverses are noisy and they are disconnecting A/T in xplane Zibo
+    // let's try to send them only if stab trim AP is on (which I don't have mapped in XPL)
+    // for flight I'll switch it off to make sure there's no reverse value sent to XPL
+    bool canSendReverse = ctx()->state.transient.getButtonsRawValue()  & (1 << 8);
+    #else
+    bool canSendReverse = true
+    #endif
     if (!ctx()->simDataDriver.canSendJoyValue(index)) {
       // we don't send update when axis is being moved by motor
       // in that case we also don't want to set joyAxisUpdated
@@ -96,23 +106,31 @@ void setJoyAxis(int index, int value) {
     switch (index)
     {
     case X_AXIS:
-      joystick.setXAxis(value);
+      joystick.setXAxis(value); // throttle 1
       break;
     
     case Y_AXIS:
-      joystick.setYAxis(value);
+      joystick.setYAxis(value); // throttle 2
       break;
     
     case Z_AXIS:
-      joystick.setZAxis(value);
+      joystick.setZAxis(value); // flaps
       break;
     
     case RX_AXIS:
-      joystick.setRxAxis(value);
+      if (canSendReverse) {
+        joystick.setRxAxis(value); // rev 1
+      } else {
+        joystick.setRxAxis(0); // rev 1
+      }
       break;
     
     case RY_AXIS:
-      joystick.setRyAxis(value);
+      if (canSendReverse) {
+        joystick.setRyAxis(value); // rev 2
+      } else {
+        joystick.setRyAxis(0); // rev 2
+      }
       break;
 
     case RZ_AXIS:
