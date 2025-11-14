@@ -68,7 +68,7 @@ void GlobalContext::setup()
         setupJoy();
     }
     if (ENABLE_UDP && ENABLE_NETWORK) {
-        xplaneInterface.setup();
+        simUdpInterface.setup();
     }
     rotaryEncoder.setup();
     motorsController.scheduleSetup(300); // must be after pins setup

@@ -95,14 +95,14 @@ String TransientState::reportState() {
     state += "\"rotaryEncoderValue\":" + String(roataryEncoderValue) + ",";
     state += "\"rotaryButtonPressedTime\":" + String(rotaryButtonPressedTime) + ",";
     state += "\"rotaryButtonPressedCount\":" + String(rotaryButtonPressedCount) + ",";
-    state += "\"xplData\":{";
-    state += "\"throttle1\":" + String(xplData.throttle1) + ",";
-    state += "\"throttle2\":" + String(xplData.throttle2) + ",";
-    state += "\"trim\":" + String(xplData.trim) + ",";
-    state += "\"parkingBrake\":" + String(xplData.parkingBrake ? "true" : "false") + ",";
-    state += "\"autoThrottle\":" + String(xplData.autoThrottle ? "true" : "false") + ",";
-    state += "\"speedBrake\":" + String(xplData.speedBrake) + ",";
-    state += "\"lastUpdate\":" + String(xplData.lastUpdateTime);
+    state += "\"simData\":{";
+    state += "\"throttle1\":" + String(simData.throttle1) + ",";
+    state += "\"throttle2\":" + String(simData.throttle2) + ",";
+    state += "\"trim\":" + String(simData.trim) + ",";
+    state += "\"parkingBrake\":" + String(simData.parkingBrake ? "true" : "false") + ",";
+    state += "\"autoThrottle\":" + String(simData.autoThrottle ? "true" : "false") + ",";
+    state += "\"speedBrake\":" + String(simData.speedBrake) + ",";
+    state += "\"lastUpdate\":" + String(simData.lastUpdateTime);
     state += "}}";
     return state;
 }

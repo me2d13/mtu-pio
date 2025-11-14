@@ -120,7 +120,7 @@ public:
         delete trim;
         delete speedBrake;
     }
-    void simDataChanged(xpl_data &oldXplData, xpl_data &newXplData);
+    void simDataChanged(sim_data &oldSimData, sim_data &newSimData);
     bool canSendJoyValue(int axisIndex);
     void motorStoppedAtPosition(int motorIndex);
     driver_state *getState(int index);

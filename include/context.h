@@ -26,7 +26,7 @@ public:
   MotorsController motorsController;
   AxesController axesController;
   State state;
-  XplaneInterface xplaneInterface;
+  SimUdpInterface simUdpInterface;
   ScreenController screenController;
   SimDataDriver simDataDriver;
   void debugCall(int index);

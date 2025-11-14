@@ -194,7 +194,7 @@ void TrimDriver::calibrationTaskCallback() {
         ctx()->motorsController.getMotor(motorIndexInd1)->stopMotor();
         // found the point with known value, record it as current position 
         lastActionValue = CALIBRATED_NEW_POS;
-        ctx()->state.transient.getXplData()->trim = lastActionValue;
+        ctx()->state.transient.getSimData()->trim = lastActionValue;
         // and move to know position as both needles must have same value
         float trimAngleChange = CALIBRATED_NEW_POS - END_STOP_POSITION_TRIM_1;
         float stepperAngleChange = trimAngleChange * STEPPER_ANGLE_PER_TRIM_ANGLE;
@@ -229,7 +229,7 @@ void TrimDriver::calibrationTaskCallback() {
         // found the point with known value, record it as current position
         // found the point with known value, record it as current position 
         lastActionValue = CALIBRATED_NEW_POS;
-        ctx()->state.transient.getXplData()->trim = lastActionValue;
+        ctx()->state.transient.getSimData()->trim = lastActionValue;
         // and move to know position as both needles must have same value
         float trimAngleChange = CALIBRATED_NEW_POS - END_STOP_POSITION_TRIM_2;
         float stepperAngleChange = trimAngleChange * STEPPER_ANGLE_PER_TRIM_ANGLE;
@@ -298,20 +298,20 @@ driver_state *TrimDriver::getState() {
     return &state;
 }
 
-void SimDataDriver::simDataChanged(xpl_data &oldXplData, xpl_data &newXplData) {
+void SimDataDriver::simDataChanged(sim_data &oldSimData, sim_data &newSimData) {
     // This function is called when the sim data changes
     // It can be used to update the state or perform any other necessary actions
-    // based on the data received from X-Plane.
+    // based on the data received from the simulator (X-Plane or MSFS).
     // For example, you can check if the parking brake state has changed and update the indicator accordingly.
-    if (oldXplData.parkingBrake != newXplData.parkingBrake) {
-        ctx()->pins.setParkingBrakeIndicator(newXplData.parkingBrake);
+    if (oldSimData.parkingBrake != newSimData.parkingBrake) {
+        ctx()->pins.setParkingBrakeIndicator(newSimData.parkingBrake);
     }
-    throttle1->throttleChanged(oldXplData.throttle1, newXplData.throttle1, newXplData.autoThrottle);
-    throttle2->throttleChanged(oldXplData.throttle2, newXplData.throttle2, newXplData.autoThrottle);
+    throttle1->throttleChanged(oldSimData.throttle1, newSimData.throttle1, newSimData.autoThrottle);
+    throttle2->throttleChanged(oldSimData.throttle2, newSimData.throttle2, newSimData.autoThrottle);
     // call trim changed even with the same value on every message
     // on same values handler will stop wheel movement
-    trim->trimChanged(oldXplData.trim, newXplData.trim);
-    speedBrake->speedBrakeChanged(oldXplData.speedBrake, newXplData.speedBrake);
+    trim->trimChanged(oldSimData.trim, newSimData.trim);
+    speedBrake->speedBrakeChanged(oldSimData.speedBrake, newSimData.speedBrake);
 }
 
 bool SimDataDriver::canSendJoyValue(int axisIndex) {

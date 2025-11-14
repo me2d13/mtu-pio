@@ -23,7 +23,7 @@ struct motor_settings
     float speedMultiplier; // relative speed-up/slow-down when moving to position (e.g. have speed brake faster than throttles)
 };
 
-struct xpl_data
+struct sim_data
 {
     float throttle1;
     float throttle2;
@@ -69,7 +69,7 @@ private:
     long roataryEncoderValue = 0;
     int rotaryButtonPressedTime = 0;
     int rotaryButtonPressedCount = 0;
-    xpl_data xplData;
+    sim_data simData;
 public:
     TransientState() {
         for (int i = 0; i < NUMBER_OF_AXIS; i++) {
@@ -77,8 +77,8 @@ public:
             axisReadFailures[i] = 0;
             lastAxisJoyUpdate[i] = 0;
         }
-        xplData.lastUpdateTime = 0;
-        xplData.trim = -1.0f;
+        simData.lastUpdateTime = 0;
+        simData.trim = -1.0f;
     }
     int getAxisValue(int index);
     int getCalibratedAxisValue(int index, axis_settings *settings);
@@ -99,7 +99,7 @@ public:
     void setRotaryButtonPressedCount(int value) { this->rotaryButtonPressedCount = value; }
     void joyAxisUpdated(int index) { this->lastAxisJoyUpdate[index] = millis(); }
     unsigned long getLastAxisJoyUpdate(int index) { return this->lastAxisJoyUpdate[index]; }
-    xpl_data *getXplData() { return &this->xplData; }
+    sim_data *getSimData() { return &this->simData; }
     String reportState();
 };
 

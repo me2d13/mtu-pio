@@ -22,9 +22,9 @@ public:
             controller->popScreen();
             return;
         }
-        if (millis() - ctx()->state.transient.getXplData()->lastUpdateTime > 10000) {
+        if (millis() - ctx()->state.transient.getSimData()->lastUpdateTime > 10000) {
             memccpy(canvas, 
-                " No XPL data in last"
+                " No sim data in last"
                 " 10 seconds         "
                 "                    "
                 "                    "
@@ -37,12 +37,12 @@ public:
             "PB:        AT:      "
             "                    "
             , 0, COLS * ROWS);
-        printToCanvasRpad(3, 0, ctx()->state.transient.getXplData()->throttle1, 6);
-        printToCanvasRpad(14, 0, ctx()->state.transient.getXplData()->throttle2, 6);
-        printToCanvasRpad(3, 1, ctx()->state.transient.getXplData()->speedBrake, 6);
-        printToCanvasRpad(14, 1, ctx()->state.transient.getXplData()->trim, 6);
-        printToCanvas(3, 2, ctx()->state.transient.getXplData()->parkingBrake ? "ON" : "OFF");
-        printToCanvas(14, 2, ctx()->state.transient.getXplData()->autoThrottle ? "ON" : "OFF");
+        printToCanvasRpad(3, 0, ctx()->state.transient.getSimData()->throttle1, 6);
+        printToCanvasRpad(14, 0, ctx()->state.transient.getSimData()->throttle2, 6);
+        printToCanvasRpad(3, 1, ctx()->state.transient.getSimData()->speedBrake, 6);
+        printToCanvasRpad(14, 1, ctx()->state.transient.getSimData()->trim, 6);
+        printToCanvas(3, 2, ctx()->state.transient.getSimData()->parkingBrake ? "ON" : "OFF");
+        printToCanvas(14, 2, ctx()->state.transient.getSimData()->autoThrottle ? "ON" : "OFF");
     }
 };
 
