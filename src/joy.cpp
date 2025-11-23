@@ -134,11 +134,11 @@ void setJoyAxis(int index, int value) {
       break;
 
     case RZ_AXIS:
-      joystick.setRzAxis(value);
+      joystick.setRudder(value);
       break;
 
     case BRAKE_AXIS:
-      joystick.setRudder(value);
+      joystick.setRzAxis(value);
       break;
     
     default:

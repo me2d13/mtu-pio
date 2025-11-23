@@ -25,12 +25,12 @@ struct motor_settings
 
 struct sim_data
 {
-    float throttle1;
-    float throttle2;
-    float trim;
-    bool parkingBrake;
+    float throttle1;  // value between 0 and 1 - 1 means full throttle
+    float throttle2;  // value between 0 and 1 - 1 means full throttle
+    float trim;  // trim value itself, e.g. 5.0
+    bool parkingBrake; // true = parking brake on
     unsigned long lastUpdateTime;
-    float speedBrake;
+    float speedBrake;  // value between 0 and 1 - 1 means fully extended
     bool autoThrottle;
 };
 

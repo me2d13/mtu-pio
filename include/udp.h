@@ -12,6 +12,9 @@ private:
     int errorsLogCount = 0;
     void parsePacket(char *buffer, int len);
     void parseXplaneData(JsonDocument &doc);
+
+    static float convertMsfsTrim(float simValue);
+
     void parseMsfsData(JsonDocument &doc);
     void loopUdp();
     void logError();

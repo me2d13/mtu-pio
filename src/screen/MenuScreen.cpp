@@ -55,7 +55,7 @@ void MenuScreen::render()
         lastRotaryPos = currentRotaryPos;
     }
     memccpy(canvas, 
-        " Info      XPL data "
+        " Info      Sim data "
         " Axis      Sim ctrl "
         " Buttons            "
         " Settings           "

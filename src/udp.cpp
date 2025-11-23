@@ -27,27 +27,29 @@ WiFiUDP udp;
 #define DATAREF_AT_STATE "laminar/B738/autopilot/autothrottle_status1"
 
 // MSFS SimConnect variables (placeholders - to be updated)
-#define MSFS_THROTTLE_1 "GENERAL_ENG_THROTTLE_LEVER_POSITION_1"
-#define MSFS_THROTTLE_2 "GENERAL_ENG_THROTTLE_LEVER_POSITION_2"
-#define MSFS_PARKING_BRAKE "BRAKE_PARKING_POSITION"
-#define MSFS_AT_STATE "AUTOPILOT_THROTTLE_ARM"
-#define MSFS_SPEED_BRAKE "SPOILERS_HANDLE_POSITION"
-#define MSFS_TRIM "ELEVATOR_TRIM_POSITION"
+#define MSFS_THROTTLE_1 "THR1"
+#define MSFS_THROTTLE_2 "THR2"
+#define MSFS_PARKING_BRAKE "PARK_BRAKE"
+#define MSFS_AT_STATE "AT_ARM"
+#define MSFS_SPEED_BRAKE "SPEED_BRAKE"
+#define MSFS_TRIM "TRIM"
 
 #define _UDP_PROFILING
+#define _UDP_LOGGING
 #define UDP_PROFILING_BUFFER_SIZE 20
 
 // Capture simulator UDP data: ncat -ul 49152 > simdata.out
 
 // Send UDP packet - X-Plane format:
-// echo -n '{"sim/flightmodel/engine/ENGN_thro": [0.2, 0.0]}' | ncat -4u 192.168.1.112 49152
+// echo -n '{"sim/flightmodel/engine/ENGN_thro": [0.2, 0.0], "laminar/B738/autopilot/autothrottle_status1": 1.0'} | ncat -4u mtu.local 49152
 // echo -n '{"laminar/B738/flight_model/stab_trim_units": 5.0}' | ncat -4u 192.168.1.112 49152
-// echo -n '{"laminar/B738/flt_ctrls/speedbrake_lever": 0.5}' | ncat -4u 192.168.1.112 49152
+// echo -n '{"laminar/B738/flt_ctrls/speedbrake_lever": 0.5}' | ncat -4u mtu.local 49152
 
 // Send UDP packet - MSFS format:
-// echo -n '{"GENERAL_ENG_THROTTLE_LEVER_POSITION_1": 0.2, "GENERAL_ENG_THROTTLE_LEVER_POSITION_2": 0.0}' | ncat -4u 192.168.1.112 49152
-// echo -n '{"BRAKE_PARKING_POSITION": 1.0, "AUTOPILOT_THROTTLE_ARM": 1.0}' | ncat -4u 192.168.1.112 49152
-// echo -n '{"SPOILERS_HANDLE_POSITION": 0.5, "ELEVATOR_TRIM_POSITION": 0.3}' | ncat -4u 192.168.1.112 49152
+// echo -n '{"GENERAL ENG THROTTLE LEVER POSITION:1": 0.2, "GENERAL ENG THROTTLE LEVER POSITION:2": 0.1, "AUTOPILOT THROTTLE ARM": 1.0}' | ncat -4u mtu.local 49152
+// echo -n '{"GENERAL ENG THROTTLE LEVER POSITION:1": 0.0, "BRAKE PARKING INDICATOR": 0.0}' | ncat -4u mtu.local 49152
+// echo -n '{"GENERAL ENG THROTTLE LEVER POSITION:1": 0.0, "SPOILERS HANDLE POSITION": 0.5, "ELEVATOR TRIM INDICATOR": 0.3}' | ncat -4u mtu.local 49152
+
 
 // from https://developer.x-plane.com/article/x-plane-web-api/
 //  curl 'http://localhost:8086/api/v2/datarefs?filter\[name\]=laminar/B738/autopilot/speed_mode' -H 'Accept: application/json, text/plain, */*'
@@ -87,6 +89,10 @@ void SimUdpInterface::parsePacket(char *buffer, int len)
         logError();
         return;
     }
+#ifdef UDP_LOGGING
+    logger.println("Udp packet arrived");
+#endif
+    
     
     // Backup current sim data so we can detect if it was updated
     sim_data backupSimData = *ctx()->state.transient.getSimData();
@@ -94,10 +100,16 @@ void SimUdpInterface::parsePacket(char *buffer, int len)
     // Detect simulator type based on presence of keys and parse accordingly
     // Check for X-Plane specific key
     if (doc.containsKey(DATAREF_THROTTLE)) {
+#ifdef UDP_LOGGING
+        logger.println("Udp packet recognized as X-plane");
+#endif
         parseXplaneData(doc);
     }
     // Check for MSFS specific key
     else if (doc.containsKey(MSFS_THROTTLE_1)) {
+#ifdef UDP_LOGGING
+        logger.println("MSFS packet recognized as X-plane");
+#endif
         parseMsfsData(doc);
     }
     else {
@@ -111,6 +123,9 @@ void SimUdpInterface::parsePacket(char *buffer, int len)
     
     // Check if we have new data and update the state
     if (memcmp(&backupSimData, ctx()->state.transient.getSimData(), sizeof(sim_data)) != 0) {
+#ifdef UDP_LOGGING
+        logger.println("State data modified by UDP, calling change handler");
+#endif
         // Data changed, update the state
         ctx()->simDataDriver.simDataChanged(backupSimData, *ctx()->state.transient.getSimData());
     }
@@ -142,9 +157,12 @@ void SimUdpInterface::parseMsfsData(JsonDocument &doc)
     // MSFS provides throttle as two separate variables (not an array)
     ctx()->state.transient.getSimData()->throttle1 = doc[MSFS_THROTTLE_1] | ctx()->state.transient.getSimData()->throttle1;
     ctx()->state.transient.getSimData()->throttle2 = doc[MSFS_THROTTLE_2] | ctx()->state.transient.getSimData()->throttle2;
-    ctx()->state.transient.getSimData()->trim = doc[MSFS_TRIM] | ctx()->state.transient.getSimData()->trim;
+    float msfsTrim = doc[MSFS_TRIM] | 100000.0;
+    if (msfsTrim < 90000) {
+        ctx()->state.transient.getSimData()->trim = convertMsfsTrim(msfsTrim);
+    }
     
-    float parkingBrakeValue = doc[MSFS_PARKING_BRAKE] | -1.0f;
+    float parkingBrakeValue = doc[MSFS_PARKING_BRAKE] | -1.0f;;
     if (parkingBrakeValue >= 0.0f) {
         ctx()->state.transient.getSimData()->parkingBrake = parkingBrakeValue > 0.5f; // 0.0 = off, 1.0 = on
     }
@@ -156,6 +174,24 @@ void SimUdpInterface::parseMsfsData(JsonDocument &doc)
     
     ctx()->state.transient.getSimData()->speedBrake = doc[MSFS_SPEED_BRAKE] | ctx()->state.transient.getSimData()->speedBrake;
 }
+
+float SimUdpInterface::convertMsfsTrim(float simValue) {
+    // simValue comes as float between -16k and 16k.
+    // We need to convert it to indicator output between 0 and 17
+    // for output 0 the sim value is -16384 in unit "position 16k" or -0.6450588 in "position"
+    // for output 17 the sim value is 16384 in unit "position 16k" or 1 in "position"
+    constexpr float inMin = -0.6450588f;
+    constexpr float inMax =  1.0f;
+    constexpr float outMin = 0.0f;
+    constexpr float outMax = 17.0f;
+
+    if (simValue <= inMin) return outMin;
+    if (simValue >= inMax) return outMax;
+
+    float ratio = (simValue - inMin) / (inMax - inMin);
+    return outMin + ratio * (outMax - outMin);
+}
+
 
 void SimUdpInterface::loopUdp()
 {
