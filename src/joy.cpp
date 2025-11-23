@@ -14,7 +14,7 @@ COM9 is present in both scenarios
 */
 
 Joystick_ joystick(JOYSTICK_DEFAULT_REPORT_ID, 
-  JOYSTICK_TYPE_JOYSTICK, NUMBER_OF_BUTTONS, 0,
+  JOYSTICK_TYPE_JOYSTICK, NUMBER_OF_BUTTONS + 2, 0, // +2 for reverse buttons (derived from axis)
   true, true, true, true, true, true, // x, y, z, rx, ry, rz
   true, false, false, false, false); // rudder, throttle, accelerator, brake, steering
 
@@ -80,6 +80,10 @@ void readStateDataAndSendJoy() {
     sendJoy();
 }
 
+uint8_t getReverseButtonValueByCalibratedAxisValue(int axisValue) {
+  return axisValue > AXIS_MAX_CALIBRATED_VALUE / 2;
+}
+
 void setJoyAxis(int index, int value) {
   bool changed = (value != lastAxis[index]);
   if (changed) {
@@ -123,6 +127,7 @@ void setJoyAxis(int index, int value) {
       } else {
         joystick.setRxAxis(0); // rev 1
       }
+      joystick.setButton(REV_1_BUTTON_INDEX, getReverseButtonValueByCalibratedAxisValue(value));
       break;
     
     case RY_AXIS:
@@ -131,6 +136,7 @@ void setJoyAxis(int index, int value) {
       } else {
         joystick.setRyAxis(0); // rev 2
       }
+      joystick.setButton(REV_2_BUTTON_INDEX, getReverseButtonValueByCalibratedAxisValue(value));
       break;
 
     case RZ_AXIS:

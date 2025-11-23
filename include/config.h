@@ -31,6 +31,9 @@
 #define NUMBER_OF_DIGITAL_AXIS 5
 #define NUMBER_OF_AXIS 7
 #define NUMBER_OF_BUTTONS 16
+#define REV_1_BUTTON_INDEX 16
+#define REV_2_BUTTON_INDEX 17
+
 
 // axis indexes in axes array
 #define AXIS_INDEX_THROTTLE_1 1
