@@ -1,5 +1,6 @@
 .pio
 .vscode
+.idea
 
 .codegpt
 secrets.h

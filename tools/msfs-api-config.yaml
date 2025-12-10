@@ -1,0 +1,28 @@
+# Example configuration with UDP enabled
+general:
+  logFile: "MsfsApiServerMtu.log"
+
+webApi:
+  port: 5018
+
+udp:
+  # Enable UDP streaming
+  enabled: true
+  
+  # Target configuration - send to localhost for testing
+  # You can use tools like netcat to receive: ncat -ul 49152
+  targetHost: "mtu.local"
+  #targetHost: "localhost"
+  targetPort: 49152
+  
+  # Update every 500ms (twice per second)
+  interval: 500
+  
+  # Variables to stream
+  variables:
+    - "GENERAL ENG THROTTLE LEVER POSITION:1|THR1"
+    - "GENERAL ENG THROTTLE LEVER POSITION:2|THR2"
+    - "BRAKE PARKING INDICATOR|PARK_BRAKE"
+    - "SPOILERS HANDLE POSITION|SPEED_BRAKE"
+    - "L:VC_AT_ARM_LIGHT_VAL|AT_ARM"
+    - "ELEVATOR TRIM INDICATOR|TRIM"

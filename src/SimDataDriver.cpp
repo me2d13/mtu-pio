@@ -78,6 +78,14 @@ driver_state *ThrottleDriver::getState() {
 }
 
 void SpeedBrakeDriver::speedBrakeChanged(float oldValue, float newValue) {
+    if (!ctx()->state.persisted.enableSpeedBrake) {
+        // if speed brake motor is disabled, never move it
+        if (state.controlMode == CHASE) {
+            ctx()->motorsController.getMotor(motorIndex)->stopMotor();
+            state.controlMode = FREE;
+        }
+        return;
+    }
     int requestedPosition = newValue * (float) AXIS_MAX_CALIBRATED_VALUE;
     int currentPosition = ctx()->state.transient.getCalibratedAxisValue(axisIndex, &ctx()->state.persisted.axisSettings[axisIndex]);
     int delta = abs(currentPosition - requestedPosition);

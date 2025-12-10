@@ -5,12 +5,13 @@
 #include "screen/XplScreen.h"
 #include "screen/SimCtrlScreen.h"
 #include "screen/SettingsScreen.h"
+#include "screen/MotorIOScreen.h"
 #include "context.h"
 #include "Logger.h"
 #include "config.h"
 #include "Screen.h"
 
-#define MENU_ITEM_COUNT 6
+#define MENU_ITEM_COUNT 7
 
 screen_meta MenuScreen::getMeta()
 {
@@ -35,6 +36,8 @@ void MenuScreen::render()
             controller->pushScreen(new XplScreen());
         } else if (selectedItem == 5) {
             controller->pushScreen(new SimCtrlScreen());
+        } else if (selectedItem == 6) {
+            controller->pushScreen(new MotorIOScreen());
         }
         return;
     }
@@ -44,12 +47,12 @@ void MenuScreen::render()
         if (delta > 0) {
             selectedItem++;
             if (selectedItem >= MENU_ITEM_COUNT) {
-                selectedItem = 0;
+                selectedItem = MENU_ITEM_COUNT - 1; // Hard stop at last item
             }
         } else if (delta < 0) {
             selectedItem--;
             if (selectedItem < 0) {
-                selectedItem = MENU_ITEM_COUNT - 1;
+                selectedItem = 0; // Hard stop at first item
             }
         }
         lastRotaryPos = currentRotaryPos;
@@ -57,7 +60,7 @@ void MenuScreen::render()
     memccpy(canvas, 
         " Info      Sim data "
         " Axis      Sim ctrl "
-        " Buttons            "
+        " Buttons   Motor IO "
         " Settings           "
         , 0, COLS * ROWS);
     // printToCanvasRpad(10, 3, currentRotaryPos, 4);
