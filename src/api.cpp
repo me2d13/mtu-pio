@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include "context.h"
 #include "state.h"
+#include "web.h"
 
 // example of post request
 // curl -X POST http://192.168.1.112/api/motors -H 'Content-Type: application/json' -d '{"command":"moveToPosition","index":0, "parameters":{"position":5000}}'
@@ -92,4 +93,15 @@ ApiController::ApiController(GlobalContext *context) : server(context->getServer
         });
         configHandler->setMethod(HTTP_POST);
         server->addHandler(configHandler);
+}
+
+void ApiController::setup() {
+    // Setup periodic task to broadcast sensor data via WebSocket
+    // 500ms interval as requested
+    sensorBroadcastTask.set(500, TASK_FOREVER, []() {
+        broadcastSensorData();
+    });
+    context->taskScheduler.addTask(sensorBroadcastTask);
+    sensorBroadcastTask.enable();
+    logger.log("Sensor broadcast task scheduled (500ms interval)");
 }

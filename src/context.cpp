@@ -62,7 +62,8 @@ void GlobalContext::setup()
 
     if (ENABLE_HTTP_SERVER && ENABLE_NETWORK) {
         server = setupWeb();
-        ApiController apiController(this);
+        apiController = new ApiController(this);
+        apiController->setup();
     }
     if (ENABLE_JOYSTICK) {
         setupJoy();

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "esp32/clk.h"
+#include "context.h"
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws"); // WebSocket on "/ws"
@@ -64,6 +65,7 @@ struct Page {
 // Define the pages
 std::vector<Page> pages = {
     Page("log", "Logs", "/log", false),
+    Page("sensors", "Sensors", "/sensors", true),
     Page("motor", "Motor Control", "/motor", true),
     Page("config", "Configuration", "/config", true),
     Page("about", "About", "/about", false)
@@ -196,4 +198,17 @@ AsyncWebServer* setupWeb() {
     server.begin();
     logger.log("HTTP server started");
     return &server;
+}
+
+void broadcastSensorData() {
+    // Only broadcast if there are connected clients
+    if (ws.count() == 0) {
+        return;
+    }
+    
+    // Get the current sensor state as JSON
+    String sensorData = ctx()->state.transient.reportState();
+    
+    // Broadcast to all connected WebSocket clients
+    ws.textAll(sensorData);
 }

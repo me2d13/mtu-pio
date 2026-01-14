@@ -14,6 +14,8 @@
 #include "Screen.h"
 #include "SimDataDriver.h"
 
+class ApiController; // Forward declaration
+
 class GlobalContext {
 public:
   explicit GlobalContext();
@@ -33,6 +35,7 @@ public:
 private:
   AsyncWebServer* server;
   I2cController* i2cController;
+  ApiController* apiController;
 };
 
 GlobalContext* ctx();
