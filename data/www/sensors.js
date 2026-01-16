@@ -10,22 +10,22 @@ const axisNames = ['Speed Brake', 'Throttle 1', 'Throttle 2', 'Flaps', 'Trim', '
 function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
+
     ws = new WebSocket(wsUrl);
-    
-    ws.onopen = function() {
+
+    ws.onopen = function () {
         console.log('WebSocket connected');
         document.getElementById('status').textContent = 'Connected';
         document.getElementById('status').style.color = 'green';
-        
+
         // Clear any reconnect timer
         if (reconnectTimer) {
             clearTimeout(reconnectTimer);
             reconnectTimer = null;
         }
     };
-    
-    ws.onmessage = function(event) {
+
+    ws.onmessage = function (event) {
         try {
             const data = JSON.parse(event.data);
             updateSensorData(data);
@@ -33,18 +33,18 @@ function connectWebSocket() {
             console.error('Failed to parse WebSocket message:', e);
         }
     };
-    
-    ws.onerror = function(error) {
+
+    ws.onerror = function (error) {
         console.error('WebSocket error:', error);
         document.getElementById('status').textContent = 'Connection error';
         document.getElementById('status').style.color = 'red';
     };
-    
-    ws.onclose = function() {
+
+    ws.onclose = function () {
         console.log('WebSocket disconnected');
         document.getElementById('status').textContent = 'Disconnected - reconnecting...';
         document.getElementById('status').style.color = 'orange';
-        
+
         // Attempt to reconnect after 2 seconds
         reconnectTimer = setTimeout(connectWebSocket, 2000);
     };
@@ -56,7 +56,7 @@ function updateSensorData(data) {
         for (let i = 0; i < 7; i++) {
             const rawElement = document.getElementById(`axis-raw-${i}`);
             const calElement = document.getElementById(`axis-cal-${i}`);
-            
+
             if (rawElement) {
                 rawElement.textContent = data.axisValues[i] !== undefined ? data.axisValues[i] : '-';
             }
@@ -65,7 +65,7 @@ function updateSensorData(data) {
             }
         }
     }
-    
+
     // Update buttons
     if (data.buttonsRawValue !== undefined) {
         const buttonValue = data.buttonsRawValue;
@@ -76,15 +76,23 @@ function updateSensorData(data) {
             }
         }
     }
+
+    // Update calculated values
+    if (data.trimWheelPosition !== undefined) {
+        const trimWheelElement = document.getElementById('calc-trim-wheel');
+        if (trimWheelElement) {
+            trimWheelElement.textContent = data.trimWheelPosition;
+        }
+    }
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     connectWebSocket();
 });
 
 // Clean up on page unload
-window.addEventListener('beforeunload', function() {
+window.addEventListener('beforeunload', function () {
     if (ws) {
         ws.close();
     }

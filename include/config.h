@@ -31,8 +31,11 @@
 #define NUMBER_OF_DIGITAL_AXIS 5
 #define NUMBER_OF_AXIS 7
 #define NUMBER_OF_BUTTONS 16
+#define NUMBER_OF_VIRTUAL_BUTTONS 4
 #define REV_1_BUTTON_INDEX 16
 #define REV_2_BUTTON_INDEX 17
+#define TRIM_UP_BUTTON_INDEX 18
+#define TRIM_DOWN_BUTTON_INDEX 19
 
 
 // axis indexes in axes array
@@ -86,6 +89,12 @@
 #define ENABLE_NETWORK 1
 
 #define AXIS_MAX_CALIBRATED_VALUE 10000
+
+// how much trim axis needs to change (range 0-10000) to trigger trim abs value change
+#define TRIM_SENSOR_THRESHOLD 100
+// how much trim wheel position needs to change to trigger trim buttons
+#define TRIM_POSITION_THRESHOLD 10
+#define TRIM_BUTTON_PRESS_MS 50
 
 // do not move lever by motor if changes were caused by mtu (joystick move)
 #define MOTORIZED_UPDATE_IGNORE_INTERVAL 1000 // 1 second

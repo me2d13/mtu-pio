@@ -95,6 +95,7 @@ String TransientState::reportState() {
     state += "\"rotaryEncoderValue\":" + String(roataryEncoderValue) + ",";
     state += "\"rotaryButtonPressedTime\":" + String(rotaryButtonPressedTime) + ",";
     state += "\"rotaryButtonPressedCount\":" + String(rotaryButtonPressedCount) + ",";
+    state += "\"trimWheelPosition\":" + String(trimWheelPosition) + ",";
     state += "\"simData\":{";
     state += "\"throttle1\":" + String(simData.throttle1) + ",";
     state += "\"throttle2\":" + String(simData.throttle2) + ",";

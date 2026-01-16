@@ -70,6 +70,7 @@ private:
     long roataryEncoderValue = 0;
     int rotaryButtonPressedTime = 0;
     int rotaryButtonPressedCount = 0;
+    int trimWheelPosition = 0;
     sim_data simData;
 public:
     TransientState() {
@@ -102,6 +103,8 @@ public:
     unsigned long getLastAxisJoyUpdate(int index) { return this->lastAxisJoyUpdate[index]; }
     sim_data *getSimData() { return &this->simData; }
     String reportState();
+    int getTrimWheelPosition() { return this->trimWheelPosition; }
+    void setTrimWheelPosition(int value) { this->trimWheelPosition = value; }
 };
 
 class State
