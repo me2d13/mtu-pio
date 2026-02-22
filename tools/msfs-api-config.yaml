@@ -26,3 +26,17 @@ udp:
     - "SPOILERS HANDLE POSITION|SPEED_BRAKE"
     - "L:VC_AT_ARM_LIGHT_VAL|AT_ARM"
     - "ELEVATOR TRIM INDICATOR|TRIM"
+
+serial:
+  enabled: true
+  comPort: "COM12"
+  #comPort: "COM17"
+  baudRate: 115200
+  interval: 500
+  variables:
+    - "AIRSPEED INDICATED[knots]|spd"
+    - "PLANE ALTITUDE[feet]|alt"
+    - "PLANE PITCH DEGREES[degrees]|pitch"
+    - "PLANE BANK DEGREES[degrees]|roll"
+    - "PLANE HEADING DEGREES TRUE[degrees]|hdg"
+    - "VERTICAL SPEED[ft/min]|vs"
