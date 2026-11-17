@@ -20,6 +20,7 @@ std::string Logger::log(const std::string &message)
 
     // Add the new log entry
     m_logs.push_back(logEntry);
+    m_total++;
     Serial.println(logEntry.c_str());
 
     // Remove the oldest entry if we exceed the maximum size
@@ -35,6 +36,31 @@ std::deque<std::string> Logger::getLogs() const
 {
     std::lock_guard<std::mutex> lock(m_mutex);
     return m_logs; // Return a copy to avoid external modifications
+}
+
+uint32_t Logger::total() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_total;
+}
+
+// Entries logged after the given sequence number, oldest first
+std::vector<std::string> Logger::getLogsSince(uint32_t sequence) const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    std::vector<std::string> out;
+
+    // sequence number of the oldest entry still present in the ring buffer
+    // (entries 1..m_total were logged, only the last m_logs.size() are kept)
+    uint32_t oldest = m_total > m_logs.size() ? m_total - static_cast<uint32_t>(m_logs.size()) + 1 : 1;
+    uint32_t start = sequence + 1;
+    if (start < oldest) start = oldest;
+
+    for (uint32_t i = start; i <= m_total; i++)
+    {
+        out.push_back(m_logs[i - oldest]);
+    }
+    return out;
 }
 
 // Clear all log entries

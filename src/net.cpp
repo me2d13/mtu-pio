@@ -5,6 +5,26 @@
 #include "Logger.h"
 #include <time.h>
 #include <ArduinoOTA.h>
+#include <esp_system.h>
+
+// Why did the chip come up this time? Panic, watchdog or brownout all look the
+// same from the outside (a silent reboot), so this is worth recording.
+std::string resetReason() {
+    switch (esp_reset_reason()) {
+        case ESP_RST_UNKNOWN:   return "unknown";
+        case ESP_RST_POWERON:   return "power on";
+        case ESP_RST_EXT:       return "external pin";
+        case ESP_RST_SW:        return "software restart";
+        case ESP_RST_PANIC:     return "panic / crash";
+        case ESP_RST_INT_WDT:   return "interrupt watchdog";
+        case ESP_RST_TASK_WDT:  return "task watchdog";
+        case ESP_RST_WDT:       return "watchdog";
+        case ESP_RST_DEEPSLEEP: return "deep sleep";
+        case ESP_RST_BROWNOUT:  return "brownout (power drop)";
+        case ESP_RST_SDIO:      return "SDIO";
+        default:                return "reason " + std::to_string((int)esp_reset_reason());
+    }
+}
 
 // NTP server settings
 const char* ntpServer = "pool.ntp.org";

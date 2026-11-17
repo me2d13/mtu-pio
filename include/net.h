@@ -3,6 +3,7 @@
 
 void setupWifi();
 std::string getIp();
+std::string resetReason();
 std::string getTimeStr();
 void syncNtp();
 void setupOTA();

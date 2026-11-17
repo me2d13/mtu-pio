@@ -5,6 +5,7 @@
 #include <string>
 #include <mutex>
 #include <sstream>
+#include <vector>
 
 class Logger {
 public:
@@ -15,6 +16,12 @@ public:
 
     // Retrieve all log entries
     std::deque<std::string> getLogs() const;
+
+    // Retrieve entries logged after a given sequence number (monotonic counter)
+    std::vector<std::string> getLogsSince(uint32_t sequence) const;
+
+    // Number of entries ever logged, used by clients as a cursor
+    uint32_t total() const;
 
     // Clear all log entries
     void clearLogs();
@@ -34,6 +41,7 @@ private:
     size_t m_maxSize;                // Maximum number of log entries
     mutable std::mutex m_mutex;      // Protect shared data
     std::deque<std::string> m_logs; // Store log entries
+    uint32_t m_total = 0;            // How many entries were ever logged (monotonic)
     char m_lineBuffer[500];          // Buffer for formatting log entries
     int m_lineBufferIndex = 0;       // Index in the buffer
 

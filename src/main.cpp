@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "context.h"
+#include "Logger.h"
 #include <ArduinoOTA.h>
 #include "net.h"
 
@@ -8,6 +9,7 @@
 void setup() {
     Serial.begin(115200);
     Serial.setDebugOutput(true);
+    logger.log("Restart reason: " + resetReason());
 
     log_d("Total heap: %d", ESP.getHeapSize());
     log_d("Free heap: %d", ESP.getFreeHeap());
