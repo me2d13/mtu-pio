@@ -23,24 +23,34 @@
 </table>
 
 <h2>Buttons</h2>
-<p class="lede">A box lights up when the switch is on.</p>
+<p class="lede">A box lights up when the switch is on. Listed in the order the switches reach the
+  simulator as joystick buttons - bit N is HID button N+1. Reverse 1/2 (buttons 17/18) and trim
+  up/down (19/20) are derived from the axes, not from a switch. Bit number is shown so a box can be
+  matched to a physical switch.</p>
 <div class="grid">
-  <span class="switch" id="btn-0">AT disconnect 1</span>
-  <span class="switch" id="btn-1">AT disconnect 2</span>
-  <span class="switch" id="btn-2">TOGA 1</span>
-  <span class="switch" id="btn-3">TOGA 2</span>
-  <span class="switch" id="btn-4">Stab trim main</span>
-  <span class="switch" id="btn-5">Stab trim AP</span>
-  <span class="switch" id="btn-6">Fuel 1</span>
-  <span class="switch" id="btn-7">Fuel 2</span>
-  <span class="switch" id="btn-8">Parking brake</span>
-  <span class="switch" id="btn-9">Horn cutoff</span>
-  <span class="switch" id="btn-10">Trim stop 1</span>
-  <span class="switch" id="btn-11">Trim stop 2</span>
-  <span class="switch" id="btn-12">12V present</span>
-  <span class="switch" id="btn-13">Rotary A</span>
-  <span class="switch" id="btn-14">Rotary B</span>
-  <span class="switch" id="btn-15">Rotary button</span>
+  <span class="switch" id="btn-1">TOGA 1 (bit 1)</span>
+  <span class="switch" id="btn-2">AT disconnect 1 (bit 2)</span>
+  <span class="switch" id="btn-3">Fuel cutoff 1 (bit 3)</span>
+  <span class="switch" id="btn-4">Parking brake (bit 4)</span>
+  <span class="switch" id="btn-6">Horn cutoff (bit 6)</span>
+  <span class="switch" id="btn-8">Stab trim AP (bit 8)</span>
+  <span class="switch" id="btn-9">TOGA 2 (bit 9)</span>
+  <span class="switch" id="btn-10">AT disconnect 2 (bit 10)</span>
+  <span class="switch" id="btn-11">Fuel cutoff 2 (bit 11)</span>
+  <span class="switch" id="btn-12">Stab trim main (bit 12)</span>
+</div>
+
+<h3>Trim indicator end stops</h3>
+<div class="grid">
+  <span class="switch" id="btn-5">Trim end stop 2 (bit 5)</span>
+</div>
+
+<h3>Not identified yet</h3>
+<p class="lede">These inputs are polled but no switch has been matched to them - the rotary encoder is
+  on the ESP32 pins (16/17/18), the 12V detect on GPIO12, both shown in their own sections.</p>
+<div class="grid">
+  <span class="switch" id="btn-0">unidentified (bit 0)</span>
+  <span class="switch" id="btn-7">unidentified (bit 7)</span>
 </div>
 
 <h2>Rotary encoder</h2>

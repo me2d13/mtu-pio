@@ -235,3 +235,33 @@ which matches a silent reboot every ~2.5 minutes.
 3. **Buttons are no longer checkboxes** - `<span class="switch">` boxes with a thin border that
    fill with the teal `--live` colour when the bit is set; `state.js` toggles the `on` class from
    `buttonsRawValue`.
+
+## 10. Round 3 (2026-11-17)
+
+1. **Page titles** - dropped the `MTU - ` prefix from every page title (`pages` in `src/web.cpp`,
+   plus the two hardcoded ones in `handleLogsRequest` and the `/` handler). `generateNav()` reuses
+   the same strings, so the nav tabs now read Home / State / Simulator / Logs / Settings / Motors /
+   Debug; the brand in the top bar still carries "MTU".
+2. **State page button labels** - the labels inherited from the old `sensors.html` were the README
+   list in bit order and are wrong. Verified by the owner against the physical quadrant:
+
+| bit | switch | note |
+|---|---|---|
+| 1 | TOGA 1 | |
+| 2 | AT disconnect 1 | |
+| 3 | fuel cutoff 1 | part of `reversedButtonsMask` (3, 11) |
+| 4 | parking brake | also drives the parking LED in `src/pins.cpp` |
+| 5 | trim indicator end stop 2 | firmware calls this one "end stop 1" in `TrimDriver` |
+| 6 | horn cutoff | |
+| 8 | stab trim AP | the reverse-value gate in `src/joy.cpp` |
+| 9 | TOGA 2 | |
+| 10 | AT disconnect 2 | |
+| 11 | fuel cutoff 2 | part of `reversedButtonsMask` |
+| 12 | stab trim main | the "12V present" label here was wrong; 12V is GPIO12 |
+| 0, 7 | not identified | polled, no switch matched |
+| 13-15 | nothing | rotary encoder is GPIO16/17/18, not the MCP inputs |
+
+Ordering on the page follows the HID button the switch becomes (`joy.cpp` sends bit `i` to joystick
+button `i + 1`); the end stops are listed last. Idle `buttonsRawValue` is 6424 = bits 3, 4, 8, 11,
+12 - fuel cutoff 1, parking brake, stab trim AP, fuel cutoff 2, stab trim main, which lines up with
+the table. Firmware untouched; only the HTML changed.

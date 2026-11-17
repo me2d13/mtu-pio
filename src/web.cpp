@@ -57,13 +57,13 @@ struct Page {
 
 // Define the pages, in navigation order
 std::vector<Page> pages = {
-    Page("home", "MTU - Home", "/", false),
-    Page("state", "MTU - State", "/state", true),
-    Page("sim", "MTU - Simulator", "/sim", true),
-    Page("logs", "MTU - Logs", "/logs", true),
-    Page("settings", "MTU - Settings", "/settings", true),
-    Page("motors", "MTU - Motors", "/motors", true),
-    Page("debug", "MTU - Debug", "/debug", true)
+    Page("home", "Home", "/", false),
+    Page("state", "State", "/state", true),
+    Page("sim", "Simulator", "/sim", true),
+    Page("logs", "Logs", "/logs", true),
+    Page("settings", "Settings", "/settings", true),
+    Page("motors", "Motors", "/motors", true),
+    Page("debug", "Debug", "/debug", true)
 };
 
 // Old urls keep working
@@ -220,7 +220,7 @@ void handleLogsRequest(AsyncWebServerRequest* request) {
     auto logs = logger.getLogs();
     for (auto it = logs.rbegin(); it != logs.rend(); ++it) body += logListItem(*it);
     body += "</ul>";
-    servePage(request, "MTU - Logs", body, "logs", "logs.js");
+    servePage(request, "Logs", body, "logs", "logs.js");
 }
 
 void handlePageRequest(AsyncWebServerRequest* request, const Page* page) {
@@ -243,7 +243,7 @@ void handlePageRequest(AsyncWebServerRequest* request, const Page* page) {
 AsyncWebServer* setupWeb() {
     // Explicit routes before the static handler, so "/" resolves to the dashboard
     server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-        servePage(request, "MTU - Home", buildDashboardBody(), "home");
+        servePage(request, "Home", buildDashboardBody(), "home");
     });
 
     server.on("/logs", HTTP_GET, handleLogsRequest);
