@@ -191,8 +191,8 @@ String PersistedState::loadFromJsonObject(JsonObject &root, boolean saveOnSucces
     }
     isHidOn = root["isHidOn"] | true;
     trimWheelVelocity = root["trimWheelVelocity"] | 500;
-    enableTrimWheel = root["enableTrimWheel"] | true;
-    enableSpeedBrake = root["enableSpeedBrake"] | true;
+    enableTrimWheel = root["enableTrimWheel"] | false;
+    enableSpeedBrake = root["enableSpeedBrake"] | false;
     if (changesDone && saveOnSuccess) {
         logger.log("Changes applied to configuration, saving to flash memory");
         saveToFlash();
@@ -233,8 +233,8 @@ void PersistedState::resetToDefaultValues() {
     }
     isHidOn = true;
     trimWheelVelocity = 500;
-    enableTrimWheel = true;
-    enableSpeedBrake = true;
+    enableTrimWheel = false;
+    enableSpeedBrake = false;
 }
 
 void PersistedState::saveToFlash() {

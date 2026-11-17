@@ -16,14 +16,14 @@
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws"); // WebSocket on "/ws"
 
-// Whole page shell. Placeholders in order: title, nav, body, script tags.
+// Whole page shell. Placeholders in order: title, stylesheet url, nav, body, script tags.
 const char* pageTemplate = R"rawliteral(<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>%s</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="%s" />
 </head>
 <body>
   <header class="topbar">
@@ -163,10 +163,14 @@ void servePage(
     const std::string& currentPage,
     const std::string& jsFile = ""
     ) {
-    std::string script = "<script src=\"/app.js\"></script>";
-    if (!jsFile.empty()) script += "<script src=\"/" + jsFile + "\"></script>";
+    // SPIFFS reports a 1969 last-modified and no cache headers, so a browser would keep the old
+    // css/js forever. A stamp per render makes every page load fetch the current files.
+    std::string version = std::to_string(millis());
+    std::string css = "/style.css?v=" + version;
+    std::string script = "<script src=\"/app.js?v=" + version + "\"></script>";
+    if (!jsFile.empty()) script += "<script src=\"/" + jsFile + "?v=" + version + "\"></script>";
     AsyncResponseStream *response = request->beginResponseStream("text/html");
-    response->printf(pageTemplate, title.c_str(), generateNav(currentPage).c_str(), body.c_str(), script.c_str());
+    response->printf(pageTemplate, title.c_str(), css.c_str(), generateNav(currentPage).c_str(), body.c_str(), script.c_str());
     request->send(response);
 }
 

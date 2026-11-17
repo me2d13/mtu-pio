@@ -93,6 +93,42 @@ ApiController::ApiController(GlobalContext *context) : server(context->getServer
         });
         configHandler->setMethod(HTTP_POST);
         server->addHandler(configHandler);
+
+      // Mock simulator values - goes through the same parser and driver callbacks as a UDP packet.
+      // curl -X POST http://mtu.local/api/sim -H 'Content-Type: application/json' \
+      //   -d '{"throttle1":0.5,"throttle2":0.5,"speedBrake":1,"trim":5,"parkingBrake":true,"autoThrottle":true}'
+      // A body in the simulator format works too:
+      //   -d '{"sim/flightmodel/engine/ENGN_thro": [0.5, 0.5], "laminar/B738/flt_ctrls/speedbrake_lever": 1.0}'
+      AsyncCallbackJsonWebHandler *simHandler = new AsyncCallbackJsonWebHandler("/api/sim",
+        [](AsyncWebServerRequest *request, JsonVariant &json) {
+          JsonObject data = json.as<JsonObject>();
+          if (data.size() == 0) {
+            request->send(400, "application/json", "{\"error\":\"Empty body - nothing to apply\"}");
+            return;
+          }
+
+          String error = ctx()->simUdpInterface.applyMock(data);
+          if (error.length() > 0) {
+            request->send(400, "application/json", "{\"error\":\"" + error + "\"}");
+            return;
+          }
+
+          sim_data *sim = ctx()->state.transient.getSimData();
+          String result = "{\"applied\":{";
+          result += "\"throttle1\":" + String(sim->throttle1, 3) + ",";
+          result += "\"throttle2\":" + String(sim->throttle2, 3) + ",";
+          result += "\"speedBrake\":" + String(sim->speedBrake, 3) + ",";
+          result += "\"trim\":" + String(sim->trim, 2) + ",";
+          result += "\"parkingBrake\":";
+          result += (sim->parkingBrake ? "true" : "false");
+          result += ",";
+          result += "\"autoThrottle\":";
+          result += (sim->autoThrottle ? "true" : "false");
+          result += "}}";
+          request->send(200, "application/json", result);
+        });
+        simHandler->setMethod(HTTP_POST);
+        server->addHandler(simHandler);
 }
 
 void ApiController::setup() {

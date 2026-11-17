@@ -94,85 +94,188 @@ void SimUdpInterface::parsePacket(char *buffer, int len)
 #endif
     
     
+    applyPayload(doc.as<JsonObject>());
+}
+
+// Shared entry point for UDP packets and for values posted to /api/sim.
+bool SimUdpInterface::applyPayload(JsonObject data)
+{
     // Backup current sim data so we can detect if it was updated
     sim_data backupSimData = *ctx()->state.transient.getSimData();
     
     // Detect simulator type based on presence of keys and parse accordingly
     // Check for X-Plane specific key
-    if (doc.containsKey(DATAREF_THROTTLE)) {
+    if (data.containsKey(DATAREF_THROTTLE)) {
 #ifdef UDP_LOGGING
         logger.println("Udp packet recognized as X-plane");
 #endif
-        parseXplaneData(doc);
+        parseXplaneData(data);
     }
     // Check for MSFS specific key
-    else if (doc.containsKey(MSFS_THROTTLE_1)) {
+    else if (data.containsKey(MSFS_THROTTLE_1)) {
 #ifdef UDP_LOGGING
         logger.println("MSFS packet recognized as X-plane");
 #endif
-        parseMsfsData(doc);
+        parseMsfsData(data);
     }
     else {
         sprintf(errorMessage, "Unknown simulator data format - no recognized keys found");
         logError();
-        return;
+        return false;
     }
-    
+
+    commitChange(backupSimData);
+    return true;
+}
+
+// Friendly keys used by the Simulator page mock: throttle1, throttle2, speedBrake, trim,
+// parkingBrake, autoThrottle. A body without any of them is treated as a raw simulator payload,
+// so the endpoint also accepts exactly what the UDP port accepts.
+String SimUdpInterface::applyMock(JsonObject data)
+{
+    bool hasMockKey = data.containsKey("throttle1") || data.containsKey("throttle2") ||
+                      data.containsKey("speedBrake") || data.containsKey("trim") ||
+                      data.containsKey("parkingBrake") || data.containsKey("autoThrottle");
+
+    if (!hasMockKey) {
+        return applyPayload(data) ? "" : "No known key in the body - expected throttle1, throttle2, speedBrake, trim, parkingBrake or autoThrottle";
+    }
+
+    sim_data *sim = ctx()->state.transient.getSimData();
+    sim_data backupSimData = *sim;
+    sim_data next = *sim;
+
+    JsonVariant value = data["throttle1"];
+    if (!value.isNull()) {
+        if (!value.is<float>() && !value.is<int>()) return "throttle1 must be a number";
+        float parsed = value.as<float>();
+        if (parsed < 0.0f || parsed > 1.0f) return "throttle1 must be between 0 and 1 (0 = idle, 1 = full thrust)";
+        next.throttle1 = parsed;
+    }
+
+    value = data["throttle2"];
+    if (!value.isNull()) {
+        if (!value.is<float>() && !value.is<int>()) return "throttle2 must be a number";
+        float parsed = value.as<float>();
+        if (parsed < 0.0f || parsed > 1.0f) return "throttle2 must be between 0 and 1 (0 = idle, 1 = full thrust)";
+        next.throttle2 = parsed;
+    }
+
+    value = data["speedBrake"];
+    if (!value.isNull()) {
+        if (!value.is<float>() && !value.is<int>()) return "speedBrake must be a number";
+        float parsed = value.as<float>();
+        if (parsed < 0.0f || parsed > 1.0f) return "speedBrake must be between 0 and 1 (0 = retracted, 1 = full)";
+        next.speedBrake = parsed;
+    }
+
+    value = data["trim"];
+    if (!value.isNull()) {
+        if (!value.is<float>() && !value.is<int>()) return "trim must be a number";
+        float parsed = value.as<float>();
+        if (parsed < -20.0f || parsed > 20.0f) return "trim must be between -20 and 20 trim units";
+        next.trim = parsed;
+    }
+
+    value = data["parkingBrake"];
+    if (!value.isNull()) {
+        if (value.is<bool>()) {
+            next.parkingBrake = value.as<bool>();
+        } else if (value.is<float>() || value.is<int>()) {
+            float parsed = value.as<float>();
+            if (parsed < 0.0f || parsed > 1.0f) return "parkingBrake must be true/false or 0/1";
+            next.parkingBrake = parsed > 0.5f;
+        } else {
+            return "parkingBrake must be true/false or 0/1";
+        }
+    }
+
+    value = data["autoThrottle"];
+    if (!value.isNull()) {
+        if (value.is<bool>()) {
+            next.autoThrottle = value.as<bool>();
+        } else if (value.is<float>() || value.is<int>()) {
+            float parsed = value.as<float>();
+            if (parsed < 0.0f || parsed > 1.0f) return "autoThrottle must be true/false or 0/1";
+            next.autoThrottle = parsed > 0.5f;
+        } else {
+            return "autoThrottle must be true/false or 0/1";
+        }
+    }
+
+    // Everything checked, only then write it in - same struct the UDP parser fills.
+    *sim = next;
+
+    char message[160];
+    sprintf(message, "Mock simulator values applied: throttle1=%.2f throttle2=%.2f speedBrake=%.2f trim=%.2f parkingBrake=%s autoThrottle=%s",
+            sim->throttle1, sim->throttle2, sim->speedBrake, sim->trim,
+            sim->parkingBrake ? "on" : "off", sim->autoThrottle ? "on" : "off");
+    logger.log(message);
+
+    commitChange(backupSimData);
+    return "";
+}
+
+// Timestamps the update and hands it to the motor drivers, exactly like an arriving packet.
+void SimUdpInterface::commitChange(sim_data backup)
+{
+    sim_data *sim = ctx()->state.transient.getSimData();
+
     // Update timestamp
-    ctx()->state.transient.getSimData()->lastUpdateTime = millis();
+    sim->lastUpdateTime = millis();
     
     // Check if we have new data and update the state
-    if (memcmp(&backupSimData, ctx()->state.transient.getSimData(), sizeof(sim_data)) != 0) {
+    if (memcmp(&backup, sim, sizeof(sim_data)) != 0) {
 #ifdef UDP_LOGGING
         logger.println("State data modified by UDP, calling change handler");
 #endif
         // Data changed, update the state
-        ctx()->simDataDriver.simDataChanged(backupSimData, *ctx()->state.transient.getSimData());
+        ctx()->simDataDriver.simDataChanged(backup, *sim);
     }
 }
 
-void SimUdpInterface::parseXplaneData(JsonDocument &doc)
+void SimUdpInterface::parseXplaneData(JsonObject data)
 {
     // Parse X-Plane specific data format
-    ctx()->state.transient.getSimData()->throttle1 = doc[DATAREF_THROTTLE][0] | ctx()->state.transient.getSimData()->throttle1;
-    ctx()->state.transient.getSimData()->throttle2 = doc[DATAREF_THROTTLE][1] | ctx()->state.transient.getSimData()->throttle2;
-    ctx()->state.transient.getSimData()->trim = doc[DATAREF_TRIM] | ctx()->state.transient.getSimData()->trim;
+    ctx()->state.transient.getSimData()->throttle1 = data[DATAREF_THROTTLE][0] | ctx()->state.transient.getSimData()->throttle1;
+    ctx()->state.transient.getSimData()->throttle2 = data[DATAREF_THROTTLE][1] | ctx()->state.transient.getSimData()->throttle2;
+    ctx()->state.transient.getSimData()->trim = data[DATAREF_TRIM] | ctx()->state.transient.getSimData()->trim;
     
-    float parkingBrakeValue = doc[DATAREF_PARKING_BRAKE] | -1.0f;
+    float parkingBrakeValue = data[DATAREF_PARKING_BRAKE] | -1.0f;
     if (parkingBrakeValue >= 0.0f) {
         ctx()->state.transient.getSimData()->parkingBrake = parkingBrakeValue > 0.5f; // 0.0 = off, 1.0 = on
     }
     
-    float autoThrottleValue = doc[DATAREF_AT_STATE] | -1.0f;
+    float autoThrottleValue = data[DATAREF_AT_STATE] | -1.0f;
     if (autoThrottleValue >= 0.0f) {
         ctx()->state.transient.getSimData()->autoThrottle = autoThrottleValue > 0.5f; // 0.0 = off, 1.0 = on
     }
     
-    ctx()->state.transient.getSimData()->speedBrake = doc[DATAREF_SPEED_BRAKE] | ctx()->state.transient.getSimData()->speedBrake;
+    ctx()->state.transient.getSimData()->speedBrake = data[DATAREF_SPEED_BRAKE] | ctx()->state.transient.getSimData()->speedBrake;
 }
 
-void SimUdpInterface::parseMsfsData(JsonDocument &doc)
+void SimUdpInterface::parseMsfsData(JsonObject data)
 {
     // Parse MSFS specific data format
     // MSFS provides throttle as two separate variables (not an array)
-    ctx()->state.transient.getSimData()->throttle1 = doc[MSFS_THROTTLE_1] | ctx()->state.transient.getSimData()->throttle1;
-    ctx()->state.transient.getSimData()->throttle2 = doc[MSFS_THROTTLE_2] | ctx()->state.transient.getSimData()->throttle2;
-    float msfsTrim = doc[MSFS_TRIM] | 100000.0;
+    ctx()->state.transient.getSimData()->throttle1 = data[MSFS_THROTTLE_1] | ctx()->state.transient.getSimData()->throttle1;
+    ctx()->state.transient.getSimData()->throttle2 = data[MSFS_THROTTLE_2] | ctx()->state.transient.getSimData()->throttle2;
+    float msfsTrim = data[MSFS_TRIM] | 100000.0;
     if (msfsTrim < 90000) {
         ctx()->state.transient.getSimData()->trim = convertMsfsTrim(msfsTrim);
     }
     
-    float parkingBrakeValue = doc[MSFS_PARKING_BRAKE] | -1.0f;;
+    float parkingBrakeValue = data[MSFS_PARKING_BRAKE] | -1.0f;;
     if (parkingBrakeValue >= 0.0f) {
         ctx()->state.transient.getSimData()->parkingBrake = parkingBrakeValue > 0.5f; // 0.0 = off, 1.0 = on
     }
     
-    float autoThrottleValue = doc[MSFS_AT_STATE] | -1.0f;
+    float autoThrottleValue = data[MSFS_AT_STATE] | -1.0f;
     if (autoThrottleValue >= 0.0f) {
         ctx()->state.transient.getSimData()->autoThrottle = autoThrottleValue > 0.5f; // 0.0 = off, 1.0 = on
     }
     
-    ctx()->state.transient.getSimData()->speedBrake = doc[MSFS_SPEED_BRAKE] | ctx()->state.transient.getSimData()->speedBrake;
+    ctx()->state.transient.getSimData()->speedBrake = data[MSFS_SPEED_BRAKE] | ctx()->state.transient.getSimData()->speedBrake;
 }
 
 float SimUdpInterface::convertMsfsTrim(float simValue) {

@@ -1,26 +1,156 @@
 <h1>Simulator data</h1>
-<p class="lede">What the unit is receiving from the simulator over UDP port 49152, streamed live. Motor drivers follow these numbers when they are enabled.</p>
+<p class="lede">What the unit is receiving from the simulator, streamed live. Motor drivers follow
+  these numbers when they are enabled.</p>
 
 <div class="chips">
-  <span class="chip">last packet <b id="sim-age">-</b></span>
+  <span class="chip"><span class="dot" id="sim-live-dot"></span>simulator data <b id="sim-age">-</b></span>
   <span class="chip">auto throttle <b id="sim-auto-throttle">-</b></span>
 </div>
 
 <table>
   <thead>
-    <tr><th>Signal</th><th>Value</th><th>Percent of range</th></tr>
+    <tr><th>Signal</th><th>Current</th><th>Details</th></tr>
   </thead>
   <tbody>
-    <tr><td>Throttle 1</td><td class="value" id="sim-throttle1">-</td><td class="num" id="sim-throttle1-pct">-</td></tr>
-    <tr><td>Throttle 2</td><td class="value" id="sim-throttle2">-</td><td class="num" id="sim-throttle2-pct">-</td></tr>
-    <tr><td>Speed brake</td><td class="value" id="sim-speed-brake">-</td><td class="num" id="sim-speed-brake-pct">-</td></tr>
-    <tr><td>Trim</td><td class="value" id="sim-trim">-</td><td class="num">trim needles + trim wheel</td></tr>
-    <tr><td>Parking brake</td><td class="value" id="sim-parking-brake">-</td><td class="num">parking brake light</td></tr>
+    <tr>
+      <td>Throttle 1</td>
+      <td class="value" id="sim-throttle1">-</td>
+      <td>
+        <span class="info" tabindex="0" aria-label="Throttle 1 details">i</span>
+        <div class="details" role="tooltip">
+          <h4>Throttle 1</h4>
+          <dl>
+            <dt>Accepted</dt><dd>0.00 - 1.00 (0 = idle, 1 = full thrust)</dd>
+            <dt>Drives</dt><dd>throttle 1 motor, only while auto throttle is on</dd>
+          </dl>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Throttle 2</td>
+      <td class="value" id="sim-throttle2">-</td>
+      <td>
+        <span class="info" tabindex="0" aria-label="Throttle 2 details">i</span>
+        <div class="details" role="tooltip">
+          <h4>Throttle 2</h4>
+          <dl>
+            <dt>Accepted</dt><dd>0.00 - 1.00 (0 = idle, 1 = full thrust)</dd>
+            <dt>Drives</dt><dd>throttle 2 motor, only while auto throttle is on</dd>
+          </dl>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Speed brake</td>
+      <td class="value" id="sim-speed-brake">-</td>
+      <td>
+        <span class="info" tabindex="0" aria-label="Speed brake details">i</span>
+        <div class="details" role="tooltip">
+          <h4>Speed brake</h4>
+          <dl>
+            <dt>Accepted</dt><dd>0.00 - 1.00 (0 = retracted, 1 = full)</dd>
+            <dt>Drives</dt><dd>speed brake motor, only when it is enabled in Settings</dd>
+          </dl>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Trim</td>
+      <td class="value" id="sim-trim">-</td>
+      <td>
+        <span class="info" tabindex="0" aria-label="Trim details">i</span>
+        <div class="details" role="tooltip">
+          <h4>Trim</h4>
+          <dl>
+            <dt>Accepted</dt><dd>-20.0 to 20.0 trim units. MSFS trim is normalised to 0 - 17, the X-Plane B738 dataref is the raw stabiliser value, calibration parks the needles at 5.0</dd>
+            <dt>Drives</dt><dd>both trim needles, plus the trim wheel when enabled</dd>
+          </dl>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Parking brake</td>
+      <td class="value" id="sim-parking-brake">-</td>
+      <td>
+        <span class="info" tabindex="0" aria-label="Parking brake details">i</span>
+        <div class="details" role="tooltip">
+          <h4>Parking brake</h4>
+          <dl>
+            <dt>Accepted</dt><dd>true / false (1 / 0 accepted too)</dd>
+            <dt>Drives</dt><dd>parking brake light on the quadrant</dd>
+          </dl>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>Auto throttle</td>
+      <td class="value" id="sim-auto-throttle-value">-</td>
+      <td>
+        <span class="info" tabindex="0" aria-label="Auto throttle details">i</span>
+        <div class="details" role="tooltip">
+          <h4>Auto throttle</h4>
+          <dl>
+            <dt>Accepted</dt><dd>true / false (1 / 0 accepted too)</dd>
+            <dt>Drives</dt><dd>gates both throttle motors - while off the throttles never follow the simulator</dd>
+          </dl>
+        </div>
+      </td>
+    </tr>
   </tbody>
 </table>
 
+<h2>Mock simulator values</h2>
+<p class="lede">Push values into the unit without running the simulator. The body is posted to
+  <code>/api/sim</code> and goes through the same parser and the same driver callbacks as a UDP packet
+  on port 49152, so the motors react exactly as they would to the real thing. Fields left empty keep
+  their current value.</p>
+
 <div class="note">
-  <strong>Not implemented yet.</strong> This page is read-only for now. The plan is to add a form
-  here that pushes test values into the unit through an API call, so the motors can be exercised
-  without running the simulator.
+  <strong>These move real levers.</strong> Throttles only follow when auto throttle is on, the speed
+  brake only when its motor is enabled in Settings, trim always turns the needles.
 </div>
+
+<div class="row">
+  <label>Throttle 1 (0 - 1)
+    <input type="number" id="mock-throttle1" min="0" max="1" step="0.01" placeholder="current" />
+  </label>
+  <label>Throttle 2 (0 - 1)
+    <input type="number" id="mock-throttle2" min="0" max="1" step="0.01" placeholder="current" />
+  </label>
+  <label>Speed brake (0 - 1)
+    <input type="number" id="mock-speed-brake" min="0" max="1" step="0.01" placeholder="current" />
+  </label>
+  <label>Trim (-20 - 20)
+    <input type="number" id="mock-trim" min="-20" max="20" step="0.1" placeholder="current" />
+  </label>
+  <label>Parking brake
+    <select id="mock-parking-brake">
+      <option value="">keep current</option>
+      <option value="true">on (true)</option>
+      <option value="false">off (false)</option>
+    </select>
+  </label>
+  <label>Auto throttle
+    <select id="mock-auto-throttle">
+      <option value="">keep current</option>
+      <option value="true">on (true)</option>
+      <option value="false">off (false)</option>
+    </select>
+  </label>
+</div>
+
+<div class="row">
+  <button class="primary" id="mock-send">Send to motors</button>
+  <button class="ghost" id="mock-fill">Copy current values</button>
+  <button class="ghost" id="mock-clear">Clear fields</button>
+</div>
+
+<pre id="mock-payload">{}</pre>
+<p class="feedback" id="feedback-mock"></p>
+
+<p class="lede">Same endpoint from the command line, and a raw simulator payload is accepted too:</p>
+<pre>curl -X POST http://mtu.local/api/sim -H 'Content-Type: application/json' \
+  -d '{"throttle1": 0.5, "autoThrottle": true, "parkingBrake": false}'
+
+curl -X POST http://mtu.local/api/sim -H 'Content-Type: application/json' \
+  -d '{"sim/flightmodel/engine/ENGN_thro": [0.5, 0.5], "laminar/B738/flt_ctrls/speedbrake_lever": 1.0}'</pre>
