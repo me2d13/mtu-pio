@@ -103,7 +103,8 @@ String TransientState::reportState() {
     state += "\"parkingBrake\":" + String(simData.parkingBrake ? "true" : "false") + ",";
     state += "\"autoThrottle\":" + String(simData.autoThrottle ? "true" : "false") + ",";
     state += "\"speedBrake\":" + String(simData.speedBrake) + ",";
-    state += "\"lastUpdate\":" + String(simData.lastUpdateTime);
+    state += "\"lastUpdate\":" + String(simData.lastUpdateTime) + ",";
+    state += "\"ageMs\":" + String(simData.lastUpdateTime ? millis() - simData.lastUpdateTime : 0);
     state += "}}";
     return state;
 }

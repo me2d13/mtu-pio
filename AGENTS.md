@@ -80,8 +80,14 @@ mtu-pio/
 │   └── screen/
 │       └── MenuScreen.cpp    # Main menu implementation
 ├── data/www/                 # Web interface files (served from SPIFFS)
-│   ├── config.html           # Configuration page
-│   └── config.js             # Configuration page logic
+│   ├── style.css             # Hand written stylesheet, no framework
+│   ├── app.js               # Shared WebSocket connection + helpers
+│   ├── state.html / state.js # Live axis, button and encoder readings
+│   ├── sim.html / sim.js    # Simulator data received over UDP
+│   ├── logs.js              # Live log list (the list itself is rendered by the server)
+│   ├── settings.html / settings.js # Persisted configuration
+│   ├── motors.html / motors.js # Motor control
+│   └── debug.html / debug.js   # i2c scan, hw calls, heap
 └── platformio.ini            # PlatformIO build configuration
 ```
 
@@ -205,7 +211,7 @@ USB port: COM11
    - `fillJsonDocument()` - export
    - `loadFromJsonObject()` - import
    - `resetToDefaultValues()` - set default
-3. **Add to web interface** (optional) in `data/www/config.js`
+3. **Add to web interface** (optional) in `data/www/settings.js`
 4. **Add to LCD menu** (optional) - create/modify screen in `include/screen/`
 
 ### Adding a New LCD Screen
@@ -268,8 +274,7 @@ void MotorDriver::dataChanged(float oldValue, float newValue) {
 - **TMCStepper** - Stepper motor driver control
 - **TCA9548** - I2C multiplexer
 - **ArduinoJson** - JSON parsing/serialization
-- **ESPAsyncWebServer** - Web server
-- **PicoCSS** - Web UI styling
+- **ESPAsyncWebServer** - Web server (UI styling is hand written in `data/www/style.css`, no framework)
 
 ## Troubleshooting
 
@@ -287,11 +292,36 @@ void MotorDriver::dataChanged(float oldValue, float newValue) {
 - Web interface shows current state at `/api/state`
 - LCD Info screen shows system status
 
-## Web API Endpoints
+## Web Routes
 
-- `GET /api/state` - Get current state (persisted + transient)
-- `POST /api/state` - Update persisted state (JSON body)
-- `POST /api/state` with `{"factoryReset": true}` - Reset to defaults
+Pages (nav: Home, State, Simulator, Logs, Settings, Motors, Debug):
+
+- `GET /` - dashboard rendered in C++ (`buildDashboardBody()` in `src/web.cpp`): uptime, last
+  reset reason, heap, CPU, IP, HID and 12V status, motor enable chips, link cards
+- `GET /state`, `/sim`, `/settings`, `/motors`, `/debug` - shell rendered in C++, body read from
+  `data/www/<name>.html` on SPIFFS, `data/www/<name>.js` attached
+- `GET /logs` - log ring rendered newest first, then streamed live
+- `GET /log`, `/sensors`, `/config`, `/motor`, `/about` - legacy URLs, 302 to the new pages
+- `GET /heap` - free heap as plain text
+
+API:
+
+- `GET /api/state` - current state (persisted + transient)
+- `POST /api/state` - update persisted state (JSON body); `{"factoryReset": true}` resets to defaults
+- `POST /api/motors` - `{"command":"stopAll|enable|disable|runAtSpeed|runSteps|moveToPosition","index":n,"parameters":{...}}`
+- `POST /api/i2c-scan?index=`, `POST /api/debug?index=` - hardware diagnostics used by the Debug page
+
+WebSocket `/ws`, one JSON object per message:
+
+```json
+{"type":"state","data":{ ...transient state... }}   // every 500 ms per connected client
+{"type":"logs","data":[ ... ]}                      // snapshot on connect
+{"type":"logDelta","data":[ ... ]}                  // entries newer than that client's cursor
+```
+
+`broadcastUpdates()` (called by the 500 ms task in `src/api.cpp`) skips clients whose send queue
+is full and calls `ws.cleanupClients()` first, because this fork of ESPAsyncWebServer never
+prunes clients whose socket has died.
 
 ## Design Philosophy
 

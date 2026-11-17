@@ -1,0 +1,24 @@
+<h1>Debug</h1>
+<p class="lede">Hardware poking. Results are written to the log, so open the Logs page next to this one.</p>
+
+<div class="row">
+  <label for="i2c-bus">I2C bus</label>
+  <select id="i2c-bus">
+    <option value="0">0</option>
+    <option value="1">1</option>
+  </select>
+  <button class="primary" id="scan-i2c">Scan</button>
+  <span class="feedback" id="feedback-i2c"></span>
+</div>
+
+<div class="row">
+  <label for="debug-index">Axis index</label>
+  <input type="number" id="debug-index" min="0" max="6" value="0" />
+  <button class="primary" id="debug-call">Debug call</button>
+  <span class="feedback" id="feedback-debug"></span>
+</div>
+
+<div class="row">
+  <button class="ghost" id="heap-check">Free heap</button>
+  <span class="feedback" id="feedback-heap"></span>
+</div>

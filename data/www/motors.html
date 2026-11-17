@@ -1,0 +1,57 @@
+<h1>Motors</h1>
+<p class="lede">Talk directly to the TMC2208 drivers. Select a motor, then pick a command.</p>
+
+<div class="row">
+  <label><input type="radio" id="motor-0" name="motorIndex" value="0" checked /> Throttle 1</label>
+  <label><input type="radio" id="motor-1" name="motorIndex" value="1" /> Throttle 2</label>
+  <label><input type="radio" id="motor-2" name="motorIndex" value="2" /> Speed brake</label>
+  <label><input type="radio" id="motor-3" name="motorIndex" value="3" /> Trim wheel</label>
+  <label><input type="radio" id="motor-4" name="motorIndex" value="4" /> Trim indicator 1</label>
+  <label><input type="radio" id="motor-5" name="motorIndex" value="5" /> Trim indicator 2</label>
+</div>
+
+<div class="row">
+  <button class="danger" id="stop-all">Stop all motors</button>
+  <span class="feedback" id="feedback-emergency"></span>
+</div>
+
+<details id="speed-section">
+  <summary>Continuous run</summary>
+  <div class="row">
+    <input type="range" id="speed-range" min="-100" max="100" value="0" aria-label="Speed" />
+    <input type="number" id="speed-number" value="0" aria-label="Speed" />
+    <button class="primary" id="send-speed">Run</button>
+    <button class="ghost" id="stop-speed">Stop</button>
+  </div>
+  <p class="feedback" id="feedback-speed"></p>
+</details>
+
+<details id="steps-section">
+  <summary>Make steps</summary>
+  <div class="row">
+    <input type="range" id="angle-range" min="-360" max="360" value="0" aria-label="Angle" />
+    <input type="number" id="angle-number" value="0" aria-label="Angle" />
+    <input type="number" id="rpm-number" value="20" aria-label="RPM" />
+    <button class="primary" id="send-steps">Run</button>
+  </div>
+  <p class="feedback" id="feedback-steps"></p>
+</details>
+
+<details id="position-section">
+  <summary>Set position</summary>
+  <div class="row">
+    <input type="range" id="position-range" min="0" max="10000" value="5000" aria-label="Position" />
+    <input type="number" id="position-number" value="5000" aria-label="Position" />
+    <button class="primary" id="send-position">Set</button>
+  </div>
+  <p class="feedback" id="feedback-position"></p>
+</details>
+
+<details id="enable-section">
+  <summary>Enable / disable driver</summary>
+  <div class="row">
+    <button class="primary" id="enable">Enable</button>
+    <button class="ghost" id="disable">Disable</button>
+  </div>
+  <p class="feedback" id="feedback-enable"></p>
+</details>

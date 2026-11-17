@@ -1,0 +1,26 @@
+<h1>Simulator data</h1>
+<p class="lede">What the unit is receiving from the simulator over UDP port 49152, streamed live. Motor drivers follow these numbers when they are enabled.</p>
+
+<div class="chips">
+  <span class="chip">last packet <b id="sim-age">-</b></span>
+  <span class="chip">auto throttle <b id="sim-auto-throttle">-</b></span>
+</div>
+
+<table>
+  <thead>
+    <tr><th>Signal</th><th>Value</th><th>Percent of range</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Throttle 1</td><td class="value" id="sim-throttle1">-</td><td class="num" id="sim-throttle1-pct">-</td></tr>
+    <tr><td>Throttle 2</td><td class="value" id="sim-throttle2">-</td><td class="num" id="sim-throttle2-pct">-</td></tr>
+    <tr><td>Speed brake</td><td class="value" id="sim-speed-brake">-</td><td class="num" id="sim-speed-brake-pct">-</td></tr>
+    <tr><td>Trim</td><td class="value" id="sim-trim">-</td><td class="num">trim needles + trim wheel</td></tr>
+    <tr><td>Parking brake</td><td class="value" id="sim-parking-brake">-</td><td class="num">parking brake light</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>Not implemented yet.</strong> This page is read-only for now. The plan is to add a form
+  here that pushes test values into the unit through an API call, so the motors can be exercised
+  without running the simulator.
+</div>

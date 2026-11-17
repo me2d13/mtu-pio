@@ -1,0 +1,53 @@
+<h1>Live state</h1>
+<p class="lede">Hardware readings streamed over WebSocket every 500 ms. What the simulator sends is on the <a href="/sim">Simulator</a> page.</p>
+
+<div class="chips">
+  <span class="chip"><span class="dot" id="dot-12v"></span>12V <b id="val-12v">-</b></span>
+  <span class="chip">i2c switch failures <b id="val-i2c-failures">0</b></span>
+</div>
+
+<h2>Axes</h2>
+<table>
+  <thead>
+    <tr><th>Axis</th><th>Raw</th><th>Calibrated</th><th>Read failures</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Speed brake</td><td class="num" id="axis-raw-0">-</td><td class="value" id="axis-cal-0">-</td><td class="num" id="axis-fail-0">-</td></tr>
+    <tr><td>Throttle 1</td><td class="num" id="axis-raw-1">-</td><td class="value" id="axis-cal-1">-</td><td class="num" id="axis-fail-1">-</td></tr>
+    <tr><td>Throttle 2</td><td class="num" id="axis-raw-2">-</td><td class="value" id="axis-cal-2">-</td><td class="num" id="axis-fail-2">-</td></tr>
+    <tr><td>Flaps</td><td class="num" id="axis-raw-3">-</td><td class="value" id="axis-cal-3">-</td><td class="num" id="axis-fail-3">-</td></tr>
+    <tr><td>Trim</td><td class="num" id="axis-raw-4">-</td><td class="value" id="axis-cal-4">-</td><td class="num" id="axis-fail-4">-</td></tr>
+    <tr><td>Reverse 1</td><td class="num" id="axis-raw-5">-</td><td class="value" id="axis-cal-5">-</td><td class="num" id="axis-fail-5">-</td></tr>
+    <tr><td>Reverse 2</td><td class="num" id="axis-raw-6">-</td><td class="value" id="axis-cal-6">-</td><td class="num" id="axis-fail-6">-</td></tr>
+  </tbody>
+</table>
+
+<h2>Buttons</h2>
+<p class="lede">A box lights up when the switch is on.</p>
+<div class="grid">
+  <span class="switch" id="btn-0">AT disconnect 1</span>
+  <span class="switch" id="btn-1">AT disconnect 2</span>
+  <span class="switch" id="btn-2">TOGA 1</span>
+  <span class="switch" id="btn-3">TOGA 2</span>
+  <span class="switch" id="btn-4">Stab trim main</span>
+  <span class="switch" id="btn-5">Stab trim AP</span>
+  <span class="switch" id="btn-6">Fuel 1</span>
+  <span class="switch" id="btn-7">Fuel 2</span>
+  <span class="switch" id="btn-8">Parking brake</span>
+  <span class="switch" id="btn-9">Horn cutoff</span>
+  <span class="switch" id="btn-10">Trim stop 1</span>
+  <span class="switch" id="btn-11">Trim stop 2</span>
+  <span class="switch" id="btn-12">12V present</span>
+  <span class="switch" id="btn-13">Rotary A</span>
+  <span class="switch" id="btn-14">Rotary B</span>
+  <span class="switch" id="btn-15">Rotary button</span>
+</div>
+
+<h2>Rotary encoder</h2>
+<table>
+  <tbody>
+    <tr><td>Trim wheel position</td><td class="value" id="trim-wheel">-</td></tr>
+    <tr><td>Rotary encoder ticks</td><td class="value" id="rotary-value">-</td></tr>
+    <tr><td>Rotary button presses</td><td class="value" id="rotary-presses">-</td></tr>
+  </tbody>
+</table>

@@ -99,7 +99,7 @@ void ApiController::setup() {
     // Setup periodic task to broadcast sensor data via WebSocket
     // 500ms interval as requested
     sensorBroadcastTask.set(500, TASK_FOREVER, []() {
-        broadcastSensorData();
+        broadcastUpdates();
     });
     context->taskScheduler.addTask(sensorBroadcastTask);
     sensorBroadcastTask.enable();
